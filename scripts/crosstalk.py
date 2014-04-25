@@ -1,7 +1,6 @@
 from read_drs import event_generator, return_dtype
 from numpy import fromstring, sum, histogram, exp
 from pde_int import get_guess, get_cutoff, get_n_mean
-from scipy.signal import iirfilter, filtfilt
 from Fit import getFitData
 
 
@@ -14,7 +13,7 @@ def darks(filename, thrs_1, thrs_2=None, nchannels=2):
 
     with open(filename, 'r') as f:
         gen = (fromstring(event, my_dtype)[0][5]
-                for event in event_generator(f, nchannels))
+               for event in event_generator(f, nchannels))
         traces = []
 
         for event in gen:
@@ -32,7 +31,7 @@ def peaks(filename, int_limits, nchannels=2):
     my_dtype = return_dtype(nchannels)
     with open(filename, 'r') as f:
         gen = (fromstring(event, my_dtype)[0][5]
-                for event in event_generator(f, nchannels))
+               for event in event_generator(f, nchannels))
         peaks = [sum(event[int_limits[0]:int_limits[1]]) for event in gen]
 
     return peaks
