@@ -26,7 +26,7 @@ def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False):
             fname = wavelength + '_' + str(i+1)
             intd, mind = scatter(fname, int_start)
             a, b = get_line(intd, mind)
-            sipm_hist = get_hist(intd, mind, b)
+            sipm_hist = get_hist(intd, mind, b)[0]
 
             with open(fname, 'r') as fl:
                 my_dtype = return_dtype(2)
@@ -64,14 +64,17 @@ def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False):
 
     return pde_array, wavelength_array, sterr_array, syserr_array
 
-    def get_dark_counts(dark_st, int_st, filelist, protoevent):
-        darks = []
-        for f in filelist:
-            intd, mind = scatter(f, int_st)
-            a, b = get_line(intd, mind)
-            intd, mind = dark_scatter(f, int_st, protoevent)
-            hist = get_hist(intd, mind, b)
 
-            guess = get_guess(hist)
-            sipm_pe = get_n_mean(hist, get_cutoff(hist, guess=guess))
-            darks.append(sipm_pe)
+def get_dark_counts(dark_st, int_st, filelist, protoevent):
+    darks = []
+    for f in filelist:
+        intd, mind = scatter(f, int_st)
+        a, b = get_line(intd, mind)
+        intd, mind = dark_scatter(f, dark_st, protoevent)
+        hist = get_hist(intd, mind, b)[0]
+
+        guess = get_guess(hist)
+        sipm_pe = get_nmean_errors(hist, get_cutoff(hist, guess=guess))
+        darks.append(sipm_pe)
+        print sipm_pe
+    return darks
