@@ -97,7 +97,7 @@ def xtalk_single_spec(hist):
 def test_get_spectra(filename, int_limits):
     peak = peaks(filename, int_limits)
     temp_hist = histogram(peak, bins=2048)
-    cutoff = 2047 - getFitData(temp_hist[0][::-1], 3)[4] - test
+    cutoff = 2047 - getFitData(temp_hist[0][::-1], 3)[4]
     thrs = temp_hist[1][cutoff] / 180
     dark = darks(filename, thrs)
     mx = max(max(dark), max(peak))
