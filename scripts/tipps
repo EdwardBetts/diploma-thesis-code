@@ -1,0 +1,1 @@
+awk '{if($1==18) print $2}' events_v965.dat > 18a
