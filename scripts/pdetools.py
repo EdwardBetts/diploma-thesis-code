@@ -16,10 +16,23 @@ def correct_wavelength(wavelength):
 
 
 def calc_pde_with_errors(A1, A2, B1, B2, qe_pmt, dkcts):
-    factor = (A1[0] - dkcts) * (A2[0] - dkcts) / B1[0] / B2[0]
+    try:
+        factor = (A1[0] - dkcts[0]) * (A2[0] - dkcts[0]) / B1[0] / B2[0]
+    except TypeError:
+        factor = (A1[0] - dkcts) * (A2[0] - dkcts) / B1[0] / B2[0]
+        dkcts = (dkcts, dkcts / 2)
+
     pde = sqrt(factor) * qe_pmt
-    err = (sqrt(0.5 * A2[0] / B1[0] / B2[0] * A1[1]) +
-           sqrt(0.5 * A1[0] / B1[0] / B2[0] * A2[1]) +
-           sqrt(-0.5 * A1[0] * A2[0] / B1[0]**2 / B2[0] * B1[1]) +
-           sqrt(-0.5 * A1[0] * A2[0] / B1[0] / B2[0]**2 * B2[1]))*factor**(-1)
-    return pde, err
+    #statistical error:
+    sterr = sqrt((0.5 * factor**(0.5) / A1[0] * A1[1])**2 +
+                 (0.5 * factor**(0.5) / A2[0] * A2[1])**2 +
+                 (- 0.5 * factor**(0.5) / B1[0] * B1[1])**2 +
+                 (- 0.5 * factor**(0.5) / B2[0] * B2[1])**2 +
+                 (0.5 * factor / B1[0] / B2[0] *
+                  (2 * dkcts[0] - A1[0] - A2[0]) * dkcts[1])**2) * qe_pmt
+    #systematic error:
+    syserr = sqrt((0.5 * factor**(0.5) / A1[0] * A1[2])**2 +
+                 (0.5 * factor**(0.5) / A2[0] * A2[2])**2 +
+                 (- 0.5 * factor**(0.5) / B1[0] * B1[2])**2 +
+                 (- 0.5 * factor**(0.5) / B2[0] * B2[2])**2) * qe_pmt
+    return pde, sterr, syserr
