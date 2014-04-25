@@ -1,8 +1,9 @@
 from glob import glob
 from read_drs import event_generator, return_dtype
-from numpy import histogram, sum, log, unique, argmin, mean, inf, std
-from numpy import loadtxt, where, sqrt, arctan, sin, fromstring, r_
-from smooth import smooth
+from numpy import histogram, sum, unique, mean, inf, std
+from numpy import loadtxt, where, fromstring
+from pdetools import calc_pde_with_errors, correct_wavelength
+from spectools import get_guess, get_cutoff, get_nmean_errors, get_n_mean
 
 
 def extract_pde(dark_counts=False, cutoff=32675, w_start=340,
@@ -76,81 +77,6 @@ def extract_pde(dark_counts=False, cutoff=32675, w_start=340,
         syserr_array.append(syserr)
 
     return pde_array, wavelength_array, sterr_array, syserr_array
-
-
-def get_n_mean(data, cutoff):
-    pedestal = float(sum(data[cutoff:]))
-    all_ = sum(data)
-    return - log(pedestal / all_)
-
-
-def get_cutoff(data, guess, window=50):
-    smoothdata = smooth(data)
-    amin = argmin(smoothdata[guess - window: guess + window])
-    return amin - 5.5 + guess - window
-
-
-def calculate_pde(A_1, A_2, B_1, B_2, pde_pmt, dark_count=0.16145021896652537):
-    factor = (A_1 - dark_count) * (A_2 - dark_count) / B_1 / B_2
-    return sqrt(factor) * pde_pmt
-
-
-def correct_wavelength(wavelength):
-    angle = arctan(.75 / 3)
-    #given by the manufacturor of the ir-filters
-    k = 0.11
-    factor = 1 - k * sin(angle) * sin(angle)
-
-    return wavelength * factor
-
-
-def calc_pde_with_errors(A1, A2, B1, B2, qe_pmt, dkcts=0.16145021896652537):
-    try:
-        factor = (A1[0] - dkcts[0]) * (A2[0] - dkcts[0]) / B1[0] / B2[0]
-    except TypeError:
-        factor = (A1[0] - dkcts) * (A2[0] - dkcts) / B1[0] / B2[0]
-        dkcts = (dkcts, dkcts / 2)
-
-    pde = sqrt(factor) * qe_pmt
-    #statistical error:
-    sterr = sqrt((0.5 * factor**(0.5) / A1[0] * A1[1])**2 +
-                 (0.5 * factor**(0.5) / A2[0] * A2[1])**2 +
-                 (- 0.5 * factor**(0.5) / B1[0] * B1[1])**2 +
-                 (- 0.5 * factor**(0.5) / B2[0] * B2[1])**2 +
-                 (0.5 * factor / B1[0] / B2[0] *
-                  (2 * dkcts[0] - A1[0] - A2[0]) * dkcts[1])**2) * qe_pmt
-    #systematic error:
-    syserr = sqrt((0.5 * factor**(0.5) / A1[0] * A1[2])**2 +
-                 (0.5 * factor**(0.5) / A2[0] * A2[2])**2 +
-                 (- 0.5 * factor**(0.5) / B1[0] * B1[2])**2 +
-                 (- 0.5 * factor**(0.5) / B2[0] * B2[2])**2) * qe_pmt
-    return pde, sterr, syserr
-
-
-def get_nmean_errors(data, cutoff, swin=7):
-    pedestal = float(sum(data[cutoff:]))
-    all_ = sum(data)
-    n_mean = -log(pedestal / all_)
-    #statistical error
-    sterr = sqrt(pedestal) / pedestal
-    #systematic error:
-    syserr = max([abs(n_mean - get_n_mean(data, cutoff - swin + 2 * swin * i))
-                 for i in range(2)])
-    return n_mean, sterr, syserr
-
-
-def get_guess(spec, window_len=11, n=2, m=20):
-    sdata = smooth(spec[::-1], window_len)
-
-    #find values which are higher than neighbors
-    test = r_[True, sdata[1:] > sdata[:-1]] & r_[sdata[:-1] > sdata[1:], True]
-
-    #find values which are higher than the next m neighbors
-    newInds = where(test)[0]
-    values = [i - 5 for i in newInds[newInds > m] if sdata[i] ==
-              max(sdata[i-m:i+m + 1]) and sdata[i] > 1.0]
-    mu_values = [2048 - i for i in values[n - 2:n]]
-    return mean(mu_values)
 
 
 def get_dark_counts(filelist, w_start, w_len):
