@@ -59,7 +59,8 @@ def event_generator(f, nchannels=1):
 
 
 def return_dtype(n):
-    #binary structure can be seen in http://www.psi.ch/drs/DocumentationEN/manual_rev40.pdf
+    #binary structure can be seen in
+    #http://www.psi.ch/drs/DocumentationEN/manual_rev40.pdf
     #define dtype
     if n == 1:
         dtype = np.dtype([('header', np.str_, 4), ('serial number', np.int32),
@@ -85,7 +86,7 @@ def scatter(filename, thrs, nchannels=2):
 
         data = [(sum(event[thrs:thrs + 180]),
                  min(filtfilt(b, a, event)[thrs:thrs + 180]) - 200)
-        for event in gen if max(filtfilt(b, a, event)[:20]) < 400]
+                for event in gen if max(filtfilt(b, a, event)[:20]) < 400]
 
     int_data = zip(*data)[0]
     min_data = zip(*data)[1]
@@ -101,7 +102,7 @@ def dark_scatter(filename, thrs, protoevent, nchannels=2):
 
         data = [(sum(event[thrs:thrs + 180] + protoevent[thrs:thrs + 180]),
                  min(filtfilt(b, a, event + protoevent)[thrs:thrs + 180])-200)
-        for event in gen if max(filtfilt(b, a, event)[:20]) < 400]
+                for event in gen if max(filtfilt(b, a, event)[:20]) < 400]
 
     int_data = zip(*data)[0]
     min_data = zip(*data)[1]
