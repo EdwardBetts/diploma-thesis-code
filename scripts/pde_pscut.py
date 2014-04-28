@@ -2,7 +2,7 @@ from glob import glob
 from numpy import unique, loadtxt, fromstring, histogram, inf, where
 from read_drs import scatter, dark_scatter, return_dtype, event_generator
 from pscut import get_line, get_hist
-from spectools import get_guess, get_cutoff, get_n_mean, get_nmean_errors
+from spectools import get_guess, get_cutoff, get_nmean_errors
 from pdetools import calc_pde_with_errors, correct_wavelength
 
 
