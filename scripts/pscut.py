@@ -34,7 +34,7 @@ def decide_n(n):
 
 
 def coord_from_fit(hist, fitdat, peaknum=4):
-    pedx = hist[1][2048 - fitdat[0][1] - 1]
+    pedx = hist[1][2048 - fitdat[0][4] - 1]
     peaknumx = hist[1][2048 - fitdat[0][(peaknum - 1) * 3 + 1] - 1]
     return pedx, peaknumx
 

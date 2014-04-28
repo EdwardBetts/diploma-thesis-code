@@ -16,8 +16,9 @@ def correct_wavelength(wavelength):
 
 
 def calc_pde_with_errors(A1, A2, B1, B2, qe_pmt, dkcts):
+    a = 0.006
     try:
-        factor = (A1[0] - dkcts[0]) * (A2[0] - dkcts[0]) / B1[0] / B2[0]
+        factor = (A1[0]-dkcts[0]) * (A2[0]-dkcts[0]) / (B1[0]-a) / (B2[0]-a)
     except TypeError:
         factor = (A1[0] - dkcts) * (A2[0] - dkcts) / B1[0] / B2[0]
         dkcts = (dkcts, dkcts / 2)
