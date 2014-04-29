@@ -45,8 +45,8 @@ def get_fit_data(data, n, window_len=11, m=30, nopeaks=4):
     smoothed_data = smooth.smooth(data, window_len)
 
     params = list(getFitData(data, nopeaks))
-    peak_space = mean([params[(i+1)*3 +1] - params[i*3 +1]
-                      for i in range(1, nopeaks -1)])
+    peak_space = mean([params[(i+1)*3 + 1] - params[i*3 + 1]
+                      for i in range(1, nopeaks - 1)])
 
     last_peak = [params[-2]]
     for i in range(nopeaks, n):
