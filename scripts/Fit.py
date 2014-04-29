@@ -1,30 +1,33 @@
 import smooth
 import numpy
-from numpy import mean, array, sum, sqrt
+from numpy import mean, array, r_
 from scipy import odr
 from multigauss import multigauss
+
 
 def getFitData(data, n, window_len=11, m=30):
     sdata = smooth.smooth(data, window_len)
 
     #find values which are higher than neighbors
-    test = numpy.r_[True,sdata[1:] > sdata[:-1]] & numpy.r_[sdata[:-1] > sdata[1:], True]
+    test = r_[True, sdata[1:] > sdata[:-1]] & r_[sdata[:-1] > sdata[1:], True]
 
     #find values which are higher than the next m neighbors
     newInds = numpy.where(test)[0]
-    values = [i - 5 for i in newInds[newInds > m] if sdata[i] == max(sdata[i-m:i+m + 1]) and sdata[i]> 1.0]
+    values = [i - 5 for i in newInds[newInds > m]
+              if sdata[i] == max(sdata[i-m:i+m + 1]) and sdata[i] > 1.0]
     mu_values = values[:n]
 
     a_values = [sdata[i] for i in mu_values]
 
     #shape output in correct way: A,mu,sigma
-    return numpy.array([[a_values[i],mu_values[i], 30] for i in range(n)]).flatten()
+    return array([[a_values[i], mu_values[i], 30] for i in range(n)]).flatten()
+
 
 def get_first_in_range(data, approx, w_len, window_len=11):
     #find minima
-    test = numpy.r_[True,data[1:] < data[:-1]] & numpy.r_[data[:-1] < data[1:], True]
+    test = r_[True, data[1:] < data[:-1]] & r_[data[:-1] < data[1:], True]
 
-    inds = numpy.where(test == True)[0]
+    inds = numpy.where(test)[0]
     #why next line?
     #inds = [i for i in inds if i > w_len]
     values = [i for i in inds if data[i] == min(data[i-w_len:i+w_len + 1])]
