@@ -6,7 +6,7 @@ from spectools import get_guess, get_cutoff, get_nmean_errors
 from pdetools import calc_pde_with_errors, correct_wavelength
 
 
-def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False):
+def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False, b=None):
     filelist = [f for f in glob('*_*') if not '.' in f]
     wavelengths = unique(i[:-2] for i in filelist)
     QE_file = '/home/jammer/diplom/calib/pmt2c.dat'
@@ -25,7 +25,8 @@ def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False):
         for i in range(2):
             fname = wavelength + '_' + str(i+1)
             intd, mind = scatter(fname, int_start)
-            a, b = get_line(intd, mind)
+            if b is None:
+                a, b = get_line(intd, mind)
             sipm_hist = get_hist(intd, mind, b)[0]
 
             with open(fname, 'r') as fl:
