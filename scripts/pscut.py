@@ -39,9 +39,9 @@ def coord_from_fit(hist, fitdat, peaknum=4):
     return pedx, peaknumx
 
 
-def get_hist(intd, mind, b=None, **args):
+def get_hist(intd, mind, b=None, percs=(25, 57), **args):
     ps_param = return_ps_param(intd, mind, b, **args)
-    cuts = [percentile(ps_param, i) for i in (25, 57)]
+    cuts = [percentile(ps_param, i) for i in percs]
     spec = [event for i, event in enumerate(mind)
             if ps_param[i] > cuts[0] and ps_param[i] < cuts[1]]
     return histogram(spec, bins=2048)
