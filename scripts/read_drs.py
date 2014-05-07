@@ -107,3 +107,19 @@ def dark_scatter(filename, thrs, protoevent, nchannels=2):
     int_data = zip(*data)[0]
     min_data = zip(*data)[1]
     return int_data, min_data
+
+
+def lowpass_scatter(filename, thrs, nchannels=2):
+    b, a = iirfilter(1, 0.05, btype='lowpass')
+    my_dtype = return_dtype(nchannels)
+    with open(filename, 'r') as f:
+        gen = (np.fromstring(event, my_dtype)[0][5]
+               for event in event_generator(f, nchannels))
+
+        data = [(sum(event[thrs:thrs + 180]),
+                 min(filtfilt(b, a, event)[thrs:thrs + 180]) - 200)
+                for event in gen]
+
+    int_data = zip(*data)[0]
+    min_data = zip(*data)[1]
+    return int_data, min_data
