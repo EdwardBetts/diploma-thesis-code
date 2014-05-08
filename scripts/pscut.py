@@ -18,9 +18,7 @@ def get_line(intd, mind, n=None, **kwargs):
     temp = odr_gauss(n, int_hist[0][::-1])
     x1, x2 = coord_from_fit(int_hist, temp, **kwargs)
     min_hist = histogram(mind, bins=2048)
-    min_mn = get_n_mean(min_hist[0], get_cutoff(min_hist[0],
-                        get_guess(min_hist[0])))
-    temp = odr_gauss(decide_n(min_mn), min_hist[0][::-1])
+    temp = odr_gauss(n, min_hist[0][::-1])
     y1, y2 = coord_from_fit(min_hist, temp, **kwargs)
 
     a = (y1 - y2) / (x1 - x2)
