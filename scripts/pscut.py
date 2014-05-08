@@ -3,29 +3,30 @@ from pde_int import get_guess, get_cutoff, get_n_mean
 from Fit import odr_gauss
 
 
-def return_ps_param(intd, mind, b=None, **args):
+def return_ps_param(intd, mind, b=None, **kwargs):
     if b is None:
-        a, b = get_line(intd, mind, **args)
-    return [mind[i] / ievent - (b / ievent) for i, ievent in enumerate(intd)]
+        a, b = get_line(intd, mind, **kwargs)
+    return [(mind[i] / evnt - (b / evnt)) / a for i, evnt in enumerate(intd)]
 
 
-def get_line(intd, mind, n=None, **args):
+def get_line(intd, mind, n=None, **kwargs):
     int_hist = histogram(intd, bins=2048)
     if n is None:
         int_mn = get_n_mean(int_hist[0], get_cutoff(int_hist[0],
                             get_guess(int_hist[0])))
         n = decide_n(int_mn)
     temp = odr_gauss(n, int_hist[0][::-1])
-    x1, x2 = coord_from_fit(int_hist, temp, **args)
+    x1, x2 = coord_from_fit(int_hist, temp, **kwargs)
     min_hist = histogram(mind, bins=2048)
     min_mn = get_n_mean(min_hist[0], get_cutoff(min_hist[0],
                         get_guess(min_hist[0])))
     temp = odr_gauss(decide_n(min_mn), min_hist[0][::-1])
-    y1, y2 = coord_from_fit(min_hist, temp, **args)
+    y1, y2 = coord_from_fit(min_hist, temp, **kwargs)
 
     a = (y1 - y2) / (x1 - x2)
     b = y1 - a*x1
     print 'b = ' + str(b)
+    print 'a = ' + str(a)
     return a, b
 
 
@@ -39,8 +40,8 @@ def coord_from_fit(hist, fitdat, peaknum=4):
     return pedx, peaknumx
 
 
-def get_hist(intd, mind, b=None, percs=(25, 57), **args):
-    ps_param = return_ps_param(intd, mind, b, **args)
+def get_hist(intd, mind, b=None, percs=(25, 57), **kwargs):
+    ps_param = return_ps_param(intd, mind, b, **kwargs)
     cuts = [percentile(ps_param, i) for i in percs]
     spec = [event for i, event in enumerate(mind)
             if ps_param[i] > cuts[0] and ps_param[i] < cuts[1]]
