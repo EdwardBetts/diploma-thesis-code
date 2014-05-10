@@ -6,7 +6,7 @@ from spectools import get_guess, get_cutoff, get_nmean_errors
 from pdetools import calc_pde_with_errors, correct_wavelength
 
 
-def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False, linepars=None):
+def extract_pde(dkcts, int_start, print_pe=False, linepars=None):
     filelist = [f for f in glob('*_*') if not '.' in f]
     wavelengths = unique(i[:-2] for i in filelist)
     QE_file = '/home/jammer/diplom/calib/pmt2c.dat'
@@ -77,7 +77,7 @@ def get_dark_counts(dark_st, int_st, filelist, protoevent, linepars=None):
         else:
             a, b = linepars
         intd, mind = dark_scatter(f, dark_st, protoevent)
-        hist = get_hist(intd, mind, b)[0]
+        hist = get_hist(intd, mind, (a, b))[0]
 
         guess = get_guess(hist)
         sipm_pe = get_nmean_errors(hist, get_cutoff(hist, guess=guess))
