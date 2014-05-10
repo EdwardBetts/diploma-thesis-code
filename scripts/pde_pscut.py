@@ -6,7 +6,7 @@ from spectools import get_guess, get_cutoff, get_nmean_errors
 from pdetools import calc_pde_with_errors, correct_wavelength
 
 
-def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False, b=None):
+def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False, linepars=None):
     filelist = [f for f in glob('*_*') if not '.' in f]
     wavelengths = unique(i[:-2] for i in filelist)
     QE_file = '/home/jammer/diplom/calib/pmt2c.dat'
@@ -25,8 +25,10 @@ def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False, b=None):
         for i in range(2):
             fname = wavelength + '_' + str(i+1)
             intd, mind = scatter(fname, int_start)
-            if b is None:
+            if linepars is None:
                 a, b = get_line(intd, mind)
+            else:
+                a, b = linepars
             sipm_hist = get_hist(intd, mind, b)[0]
 
             with open(fname, 'r') as fl:
@@ -66,11 +68,14 @@ def extract_pde(dkcts, int_start, pmt_int_thrs, print_pe=False, b=None):
     return pde_array, wavelength_array, sterr_array, syserr_array
 
 
-def get_dark_counts(dark_st, int_st, filelist, protoevent):
+def get_dark_counts(dark_st, int_st, filelist, protoevent, linepars=None):
     darks = []
     for f in filelist:
-        intd, mind = scatter(f, int_st)
-        a, b = get_line(intd, mind)
+        if linepars is None:
+            intd, mind = scatter(f, int_st)
+            a, b = get_line(intd, mind)
+        else:
+            a, b = linepars
         intd, mind = dark_scatter(f, dark_st, protoevent)
         hist = get_hist(intd, mind, b)[0]
 
