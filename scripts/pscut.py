@@ -3,9 +3,11 @@ from pde_int import get_guess, get_cutoff, get_n_mean
 from Fit import odr_gauss
 
 
-def return_ps_param(intd, mind, b=None, **kwargs):
-    if b is None:
+def return_ps_param(intd, mind, lineparams=None, **kwargs):
+    if lineparams is None:
         a, b = get_line(intd, mind, **kwargs)
+    else:
+        a, b = lineparams
     return [(mind[i] / evnt - (b / evnt)) / a for i, evnt in enumerate(intd)]
 
 
@@ -38,8 +40,8 @@ def coord_from_fit(hist, fitdat, peaknum=4):
     return pedx, peaknumx
 
 
-def get_hist(intd, mind, b=None, percs=(25, 57), **kwargs):
-    ps_param = return_ps_param(intd, mind, b, **kwargs)
+def get_hist(intd, mind, lineparams=None, percs=(25, 57), **kwargs):
+    ps_param = return_ps_param(intd, mind, lineparams, **kwargs)
     cuts = [percentile(ps_param, i) for i in percs]
     spec = [event for i, event in enumerate(mind)
             if ps_param[i] > cuts[0] and ps_param[i] < cuts[1]]
