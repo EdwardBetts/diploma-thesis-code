@@ -40,9 +40,10 @@ def coord_from_fit(hist, fitdat, peaknum=4):
     return pedx, peaknumx
 
 
-def get_hist(intd, mind, lineparams=None, percs=(25, 57), **kwargs):
+def get_hist(intd, mind, lineparams=None, cuts=None, **kwargs):
     ps_param = return_ps_param(intd, mind, lineparams, **kwargs)
-    cuts = [percentile(ps_param, i) for i in percs]
+    if cuts is None:
+        cuts = [percentile(ps_param, i) for i in (25, 57)]
     spec = [event for i, event in enumerate(mind)
             if ps_param[i] > cuts[0] and ps_param[i] < cuts[1]]
     return histogram(spec, bins=2048)
