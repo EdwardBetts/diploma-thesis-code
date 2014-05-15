@@ -26,7 +26,7 @@ def get_nmean_errors(data, cutoff, swin=7):
     return n_mean, sterr, syserr
 
 
-def get_guess(spec, window_len=11, n=2, m=20):
+def get_guess(spec, window_len=11, n=2, m=20, bins=2048):
     sdata = smooth(spec[::-1], window_len)
 
     #find values which are higher than neighbors
@@ -36,5 +36,5 @@ def get_guess(spec, window_len=11, n=2, m=20):
     newInds = where(test)[0]
     values = [i - 5 for i in newInds[newInds > m] if sdata[i] ==
               max(sdata[i-m:i+m + 1]) and sdata[i] > 1.0]
-    mu_values = [2048 - i for i in values[n - 2:n]]
+    mu_values = [bins - i for i in values[n - 2:n]]
     return mean(mu_values)

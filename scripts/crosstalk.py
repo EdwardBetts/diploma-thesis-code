@@ -2,6 +2,7 @@ from read_drs import event_generator, return_dtype
 from numpy import fromstring, sum, histogram, exp
 from pde_int import get_guess, get_cutoff, get_n_mean
 from Fit import getFitData
+from scipy.signal import iirfilter, filtfilt
 
 
 def darks(filename, thrs_1, thrs_2=None, nchannels=2):
@@ -37,10 +38,12 @@ def peaks(filename, int_limits, nchannels=2):
     return peaks
 
 
-def get_spectra(filename, int_limits, thrs_1, thrs_2=None, nchannels=2):
+def get_spectra(filename, int_limits, thrs=None, nchannels=2):
+    if thrs is None:
+        thrs = find_threshold(filename, int_limits)
 
-    _darks = darks(filename, thrs_1, thrs_2, nchannels)
-    _peaks = peaks(filename, int_limits, nchannels)
+    _darks = darks(filename, thrs_1=thrs, nchannels=nchannels)
+    _peaks = peaks(filename, int_limits=int_limits, nchannels=nchannels)
 
     mx = max(max(_darks), max(_peaks))
     mn = min(min(_darks), min(_peaks))
@@ -106,3 +109,19 @@ def test_get_spectra(filename, int_limits):
     peak_hist = histogram(peak, bins=2048, range=(mn, mx))
     sub = peak_hist[0] - dark_hist[0]
     return dark_hist, peak_hist, sub
+
+
+def find_threshold(filename, int_limits, nchannels=2):
+    b, a = iirfilter(1, 0.05, btype='lowpass')
+    my_dtype = return_dtype(nchannels)
+
+    with open(filename, 'r') as f:
+        gen = (fromstring(event, my_dtype)[0][5]
+               for event in event_generator(f, nchannels))
+        peaks = [min(event[int_limits[0]:int_limits[1]])for event
+                 in (filtfilt(b, a, eventt) for eventt in gen)]
+    hist = histogram(peaks, bins=2048)
+    idx = get_cutoff(hist[0], get_guess(hist[0]))
+    threshold = hist[1][idx]
+    print threshold
+    return threshold
