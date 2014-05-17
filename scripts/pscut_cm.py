@@ -1,6 +1,6 @@
 from scipy.ndimage import center_of_mass
 from read_drs import event_generator, return_dtype
-from numpy import fromstring, histogram, mean, std, argmax
+from numpy import fromstring, histogram, std, argmax, sign
 
 
 def get_spec(fname, roi_start, roi_width=180, nchannels=2):
@@ -48,15 +48,25 @@ def find_start(fname, roi_start, roi_width):
     cmhist = histogram(cmsarr, bins=512)
     cms = cmhist[1][argmax(cmhist[0])]
     res = (cms - (roi_width / 2. - 0.5)) * roi_width
-    roi_start = roi_start + round(res, 0)
+    if res < 25:
+        roi_start = roi_start + round(res, 0)
+    else:
+        return roi_start, cms, dev_cm_(cmsarr)
     it = 0
     while abs(res) > 1:
         cmsarr = cms_(fname, roi_start, roi_width)
         cmhist = histogram(cmsarr, bins=512)
         cms = cmhist[1][argmax(cmhist[0])]
         res = (cms - (roi_width / 2. - 0.5)) * roi_width
+        if res < 25:
+            roi_start = roi_start + round(res, 0)
+        else:
+                return roi_start, cms, dev_cm_(cmsarr)
         roi_start = roi_start + round(res, 0)
         it += 1
+        if it == 5:
+            roi_start -= 1*sign(res)
+            break
     print ' '.join(('found start in %i iterations:' % it, str(roi_start)))
     return roi_start, cms, dev_cm_(cmsarr)
 
