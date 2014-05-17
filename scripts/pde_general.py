@@ -29,7 +29,7 @@ def extract_pde(func, dkcts, print_pe=False,
 
         for i in range(2):
             fname = wavelength + '_' + str(i+1)
-            sipm_hist = func(fname, **kwargs)
+            sipm_hist = func(fname, **kwargs)[0]
 
             with open(fname, 'r') as fl:
                 my_dtype = return_dtype(2)
