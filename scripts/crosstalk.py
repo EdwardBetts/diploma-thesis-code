@@ -1,6 +1,6 @@
 from read_drs import event_generator, return_dtype
-from numpy import fromstring, sum, histogram, exp
-from pde_int import get_guess, get_cutoff, get_n_mean
+from numpy import fromstring, sum, histogram, exp, sqrt
+from pde_int import get_guess, get_cutoff, get_n_mean, get_nmean_errors
 from Fit import getFitData
 from scipy.signal import iirfilter, filtfilt
 
@@ -18,7 +18,7 @@ def darks(filename, thrs_1, thrs_2=None, nchannels=2):
         traces = []
 
         for event in gen:
-            for i, j in enumerate(event[40:140]):
+            for i, j in enumerate(event[40:100]):
                 if event[i+40] < thrs_1 and event[i+60] < thrs_2:
                     traces.append(event[i+20:i+200])
                     break
@@ -94,6 +94,22 @@ def xtalk_single_spec(hist):
     xtalk = (pg1 - pg1_p) / pg0
     print xtalk
     return xtalk
+
+
+def xtalksspec_err(hist):
+    nm, nmerr, spm = get_nmean_errors(hist, get_cutoff(hist, get_guess(hist)))
+    pg1_p = 1 - exp(- nm) - nm * exp(- nm)
+    pg1_perr = exp(- nm) * nm * nmerr
+    pg0 = 1 - exp(- nm)
+    pg0err = nmerr
+    cutoff = get_cutoff(hist, get_cutoff(hist, get_guess(hist, n=3, m=33)))
+    pg1 = sum(hist[:cutoff]) / float(sum(hist))
+    pg1err = sqrt(sum(hist[:cutoff])) / float(sum(hist))
+    xtalk = (pg1 - pg1_p) / pg0
+    err = sqrt((1 / pg0 * pg1err)**2 + (1 / pg0 * pg1_perr)**2 +
+               (xtalk / pg0 * pg0err)**2)
+    print xtalk
+    return xtalk, err
 
 
 def test_get_spectra(filename, int_limits):
