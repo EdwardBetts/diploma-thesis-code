@@ -25,8 +25,8 @@ def get_spec(fname, roi_start, roi_width=180, nchannels=2):
     return histogram(specdata, bins=2048)
 
 
-def get_darks(fname, protoevent, roi_start=9, ref_cm=89.502279884658378,
-              dev_cm=None, roi_width=180, nchannels=2):
+def get_darks(fname, protoevent, roi_start=9, ref_cm=89.5, dev_cm=None,
+              roi_width=180, nchannels=2):
     """dev_cm should be the same as in the normal cut, so it gets calculated
     in the same way"""
     print fname
