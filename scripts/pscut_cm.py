@@ -1,6 +1,6 @@
 from scipy.ndimage import center_of_mass
 from read_drs import event_generator, return_dtype
-from numpy import fromstring, histogram, std, argmax, sign
+from numpy import fromstring, histogram, std, argmax, sign, uint16, array
 
 
 def get_spec(fname, roi_start, roi_width=180, nchannels=2):
@@ -29,8 +29,10 @@ def get_darks(fname, protoevent, roi_start=9, ref_cm=89.502279884658378,
               dev_cm=None, roi_width=180, nchannels=2):
     """dev_cm should be the same as in the normal cut, so it gets calculated
     in the same way"""
+    print fname
     st, wd = roi_start, roi_width
     my_dtype = return_dtype(2)
+    protoevent = array(protoevent, dtype=uint16)
     if dev_cm is None:
         spom, spam, dev_cm = find_start(fname, 340, roi_width)
 
@@ -38,7 +40,8 @@ def get_darks(fname, protoevent, roi_start=9, ref_cm=89.502279884658378,
         gen = (fromstring(event, my_dtype)[0][5]
                for event in event_generator(f, 2))
         specdata = [sum((event + protoevent)[st:st + wd]) for event in gen
-                    if abs(center_of_mass(- event[st:st + wd])[0] - ref_cm)
+                    if abs(center_of_mass(-
+                           (event + protoevent)[st:st + wd])[0] - ref_cm)
                     < dev_cm]
     return histogram(specdata, bins=2048)
 
