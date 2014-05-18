@@ -91,9 +91,16 @@ def dev_cm_(cms):
 def cms_dark(fname, roi_start, roi_width, protoevent):
     st, wd = roi_start, roi_width
     my_dtype = return_dtype(2)
+    protoevent = array(protoevent, dtype=uint16)
     with open(fname, 'r') as f:
         gen = (fromstring(event, my_dtype)[0][5]
                for event in event_generator(f, 2))
-        cms = [center_of_mass((event + protoevent)[st:st + wd])[0]
+        cms = [center_of_mass(-(event + protoevent)[st:st + wd])[0]
                for event in gen]
     return cms
+
+
+def moveevent(event, x, peakstart=340):
+    head = list(event[peakstart - x:])
+    tail = list(event[:peakstart - x])
+    return array(head + tail)
