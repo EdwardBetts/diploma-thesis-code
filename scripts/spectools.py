@@ -38,3 +38,9 @@ def get_guess(spec, window_len=11, n=2, m=20, bins=2048):
               max(sdata[i-m:i+m + 1]) and sdata[i] > 1.0]
     mu_values = [bins - i for i in values[n - 2:n]]
     return mean(mu_values)
+
+
+def getnm(hist):
+    guess = get_guess(hist)
+    cutoff = get_cutoff(hist, guess)
+    return get_nmean_errors(hist, cutoff)
