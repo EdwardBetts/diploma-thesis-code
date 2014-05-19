@@ -4,7 +4,7 @@ from numpy import fromstring, histogram, std, sign, uint16, array
 from numpy import median
 
 
-def get_spec(fname, roi_start, roi_width=180, nchannels=2):
+def get_spec(fname, roi_start, roi_width=180, dev_cm=None, nchannels=2):
     """return a sipm spectrum using the cm method as a cut.
     roi_start is the star of the region of interest, + roi_width channels
     ref_cm is the reference center of mass. if None then mean(cm) of all events
@@ -15,7 +15,9 @@ def get_spec(fname, roi_start, roi_width=180, nchannels=2):
 
     st, wd = roi_start, roi_width
     my_dtype = return_dtype(2)
-    st, ref_cm, dev_cm = find_start(fname, roi_start, roi_width)
+    st, ref_cm, _dev_cm = find_start(fname, roi_start, roi_width)
+    if dev_cm is None:
+        dev_cm = _dev_cm
 
     with open(fname, 'r') as f:
         gen = (fromstring(event, my_dtype)[0][5]
