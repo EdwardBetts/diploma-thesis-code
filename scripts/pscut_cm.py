@@ -13,12 +13,12 @@ def get_spec(fname, roi_start, roi_width=180, nchannels=2):
     nchannels is the number of DRS channels with data. either 1 or 2"""
 
     st, wd = roi_start, roi_width
-    my_dtype = return_dtype(2)
+    my_dtype = return_dtype(nchannels)
     st, ref_cm, dev_cm = find_start(fname, roi_start, roi_width)
 
     with open(fname, 'r') as f:
         gen = (fromstring(event, my_dtype)[0][5]
-               for event in event_generator(f, 2))
+               for event in event_generator(f, nchannels))
         specdata = [sum(event[st:st + wd]) for event in gen
                     if abs(center_of_mass(- event[st:st + wd])[0] - ref_cm)
                     < dev_cm]
