@@ -1,6 +1,7 @@
 from scipy.ndimage import center_of_mass
 from read_drs import event_generator, return_dtype
-from numpy import fromstring, histogram, std, argmax, sign, uint16, array
+from numpy import fromstring, histogram, std, sign, uint16, array
+from numpy import median
 
 
 def get_spec(fname, roi_start, roi_width=180, nchannels=2):
@@ -48,8 +49,9 @@ def get_darks(fname, protoevent, roi_start=9, ref_cm=89.5, dev_cm=None,
 
 def find_start(fname, roi_start, roi_width):
     cmsarr = cms_(fname, roi_start, roi_width)
-    cmhist = histogram(cmsarr, bins=512)
-    cms = cmhist[1][argmax(cmhist[0])]
+    #cmhist = histogram(cmsarr, bins=512)
+    #cms = cmhist[1][argmax(cmhist[0])]
+    cms = median(cmsarr)
     res = (cms - (roi_width / 2. - 0.5)) * roi_width
     if res < 25:
         roi_start = roi_start + round(res, 0)
@@ -58,8 +60,9 @@ def find_start(fname, roi_start, roi_width):
     it = 0
     while abs(res) > 1:
         cmsarr = cms_(fname, roi_start, roi_width)
-        cmhist = histogram(cmsarr, bins=512)
-        cms = cmhist[1][argmax(cmhist[0])]
+        #cmhist = histogram(cmsarr, bins=512)
+        #cms = cmhist[1][argmax(cmhist[0])]
+        cms = median(cmsarr)
         res = (cms - (roi_width / 2. - 0.5)) * roi_width
         if res < 25:
             roi_start = roi_start + round(res, 0)
