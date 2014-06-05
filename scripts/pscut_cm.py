@@ -15,7 +15,7 @@ def get_spec(fname, roi_start, roi_width=180, nchannels=2):
 
     st, wd = roi_start, roi_width
     my_dtype = return_dtype(nchannels)
-    st, ref_cm, dev_cm = find_start(fname, roi_start, roi_width)
+    st, ref_cm, dev_cm = find_start(fname, roi_start, roi_width, nchannels)
 
     with open(fname, 'r') as f:
         gen = (fromstring(event, my_dtype)[0][5]
@@ -35,7 +35,7 @@ def get_darks(fname, protoevent, roi_start=9, ref_cm=89.5, dev_cm=None,
     my_dtype = return_dtype(2)
     protoevent = array(protoevent, dtype=uint16)
     if dev_cm is None:
-        spom, spam, dev_cm = find_start(fname, 340, roi_width)
+        spom, spam, dev_cm = find_start(fname, 340, roi_width, nchannels)
 
     with open(fname, 'r') as f:
         gen = (fromstring(event, my_dtype)[0][5]
@@ -47,8 +47,8 @@ def get_darks(fname, protoevent, roi_start=9, ref_cm=89.5, dev_cm=None,
     return histogram(specdata, bins=2048)
 
 
-def find_start(fname, roi_start, roi_width):
-    cmsarr = cms_(fname, roi_start, roi_width)
+def find_start(fname, roi_start, roi_width, nchannels):
+    cmsarr = cms_(fname, roi_start, roi_width, nchannels)
     #cmhist = histogram(cmsarr, bins=512)
     #cms = cmhist[1][argmax(cmhist[0])]
     cms = median(cmsarr)
@@ -59,7 +59,7 @@ def find_start(fname, roi_start, roi_width):
         return roi_start, cms, dev_cm_(cmsarr)
     it = 0
     while abs(res) > 1:
-        cmsarr = cms_(fname, roi_start, roi_width)
+        cmsarr = cms_(fname, roi_start, roi_width, nchannels)
         #cmhist = histogram(cmsarr, bins=512)
         #cms = cmhist[1][argmax(cmhist[0])]
         cms = median(cmsarr)
@@ -77,12 +77,12 @@ def find_start(fname, roi_start, roi_width):
     return roi_start, cms, dev_cm_(cmsarr)
 
 
-def cms_(fname, roi_start, roi_width):
+def cms_(fname, roi_start, roi_width, nchannels=2):
     st, wd = roi_start, roi_width
-    my_dtype = return_dtype(2)
+    my_dtype = return_dtype(nchannels)
     with open(fname, 'r') as f:
         gen = (fromstring(event, my_dtype)[0][5]
-               for event in event_generator(f, 2))
+               for event in event_generator(f, nchannels))
         cms = [center_of_mass(-event[st:st + wd])[0] for event in gen]
     return cms
 
