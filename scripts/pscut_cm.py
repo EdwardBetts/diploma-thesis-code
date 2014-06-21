@@ -1,10 +1,11 @@
 from scipy.ndimage import center_of_mass
 from read_drs import event_generator, return_dtype
 from numpy import fromstring, histogram, std, sign, uint16, array
-from numpy import median
+from numpy import median, argmax
 
 
-def get_spec(fname, roi_start, roi_width=180, nchannels=2, **kwargs):
+def get_spec(fname, roi_start, roi_width=180, nchannels=2, force_start=False,
+             **kwargs):
     """return a sipm spectrum using the cm method as a cut.
     roi_start is the star of the region of interest, + roi_width channels
     ref_cm is the reference center of mass. if None then mean(cm) of all events
@@ -15,8 +16,14 @@ def get_spec(fname, roi_start, roi_width=180, nchannels=2, **kwargs):
 
     st, wd = roi_start, roi_width
     my_dtype = return_dtype(nchannels)
-    st, ref_cm, dev_cm = find_start(fname, roi_start, roi_width, nchannels,
-                                    **kwargs)
+    if not force_start:
+        st, ref_cm, dev_cm = find_start(fname, roi_start, roi_width, nchannels,
+                                        **kwargs)
+    else:
+        cmsarr = cms_(fname, roi_start, roi_width, nchannels)
+        cmhist = histogram(cmsarr, bins=512)
+        ref_cm = cmhist[1][argmax(cmhist[0])]
+        dev_cm = dev_cm_(cmsarr)
 
     with open(fname, 'r') as f:
         gen = (fromstring(event, my_dtype)[0][5]
@@ -50,9 +57,9 @@ def get_darks(fname, protoevent, roi_start=9, ref_cm=89.5, dev_cm=None,
 
 def find_start(fname, roi_start, roi_width, nchannels, res_=25):
     cmsarr = cms_(fname, roi_start, roi_width, nchannels)
-    #cmhist = histogram(cmsarr, bins=512)
-    #cms = cmhist[1][argmax(cmhist[0])]
-    cms = median(cmsarr)
+    cmhist = histogram(cmsarr, bins=512)
+    cms = cmhist[1][argmax(cmhist[0])]
+    #cms = median(cmsarr)
     res = (cms - (roi_width / 2. - 0.5)) * roi_width
     if res < res_:
         roi_start = roi_start + round(res, 0)
@@ -61,9 +68,9 @@ def find_start(fname, roi_start, roi_width, nchannels, res_=25):
     it = 0
     while abs(res) > 1:
         cmsarr = cms_(fname, roi_start, roi_width, nchannels)
-        #cmhist = histogram(cmsarr, bins=512)
-        #cms = cmhist[1][argmax(cmhist[0])]
-        cms = median(cmsarr)
+        cmhist = histogram(cmsarr, bins=512)
+        cms = cmhist[1][argmax(cmhist[0])]
+        #cms = median(cmsarr)
         res = (cms - (roi_width / 2. - 0.5)) * roi_width
         if res < 25:
             roi_start = roi_start + round(res, 0)
