@@ -123,3 +123,12 @@ def lowpass_scatter(filename, thrs, nchannels=2):
     int_data = zip(*data)[0]
     min_data = zip(*data)[1]
     return int_data, min_data
+
+
+def int_spec(filename, win, nchannels=2, chnl=5):
+    with open(filename, 'r') as f:
+        my_dtype = return_dtype(nchannels)
+        gen = (np.fromstring(event, my_dtype)[0][chnl]
+               for event in event_generator(f, nchannels))
+        int_data = [sum(event[win[0]:win[1]]) for event in gen]
+        return np.histogram(int_data, bins=2048)

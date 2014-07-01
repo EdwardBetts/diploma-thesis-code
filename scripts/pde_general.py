@@ -2,12 +2,12 @@ from glob import glob
 from numpy import unique, loadtxt, fromstring, histogram, inf, where
 from read_drs import scatter, dark_scatter, return_dtype, event_generator
 from pscut import get_line, get_hist
-from spectools import get_guess, get_cutoff, get_nmean_errors
+from spectools import get_guess, get_cutoff, get_nmean_errors, get_co_exp
 from pdetools import calc_pde_with_errors, correct_wavelength
 
 
 def extract_pde(func, dkcts, print_pe=False,
-                qe_loc='/home/jammer/diplom/calib/pmt2c.dat', **kwargs):
+                qe_loc='/home/jammer/diplom/calib/pmt3sipc.dat', **kwargs):
     """pde calculation with arbitrary function to get a sipm hist as argument
     'func'. this function must take a filename as the first argument,
     other arguments to this function will be give with **kwargs"""
@@ -36,15 +36,13 @@ def extract_pde(func, dkcts, print_pe=False,
                 pmt_data = (fromstring(event, my_dtype)[0][7]
                             for event in event_generator(fl, 2))
 
-                pmt_sum = [sum(event[500:800]) for event in pmt_data]
-                pmt_spec = histogram(pmt_sum, bins=2048,
-                                     range=(5*10**6, 10**7))[0]
+                pmt_sum = [sum(event[600:900]) for event in pmt_data]
+                pmt_spec = histogram(pmt_sum, bins=2048)[0]
 
             sipm_guess = get_guess(sipm_hist)
             sipm_pe = get_nmean_errors(sipm_hist,
                                        get_cutoff(sipm_hist, guess=sipm_guess))
-            pmt_pe = get_nmean_errors(pmt_spec, get_cutoff(pmt_spec,
-                                      1950, window=30))
+            pmt_pe = get_nmean_errors(pmt_spec, get_co_exp(pmt_spec, 1950))
             if pmt_pe == inf:
                 pmt_pe = get_nmean_errors(pmt_spec, get_cutoff(pmt_spec,
                                           1950, window=10))

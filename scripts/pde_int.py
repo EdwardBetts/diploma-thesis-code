@@ -4,6 +4,7 @@ from numpy import histogram, sum, unique, mean, inf, std
 from numpy import loadtxt, where, fromstring
 from pdetools import calc_pde_with_errors, correct_wavelength
 from spectools import get_guess, get_cutoff, get_nmean_errors, get_n_mean
+from spectools import get_co_exp
 
 
 def extract_pde(dark_counts=False, cutoff=32675, w_start=340,
@@ -38,8 +39,7 @@ def extract_pde(dark_counts=False, cutoff=32675, w_start=340,
                              for event in event_generator(fl, 2))
 
                 sipm_max = [sum(event[w_start:w_start + w_len])
-                            for event in sipm_data
-                            if sum(event[w_start-w_len:w_start]) > cutoff]
+                            for event in sipm_data]
                 sipm_spec = histogram(sipm_max, bins=2048)[0]
 
             #create pmt spectrum
@@ -47,18 +47,16 @@ def extract_pde(dark_counts=False, cutoff=32675, w_start=340,
                 pmt_data = (fromstring(event, my_dtype)[0][7]
                             for event in event_generator(fl, 2))
 
-                pmt_sum = [sum(event[500:800]) for event in pmt_data]
-                pmt_spec = histogram(pmt_sum, bins=2048,
-                                     range=(5*10**6, 10**7))[0]
+                pmt_sum = [sum(event[600:900]) for event in pmt_data]
+                pmt_spec = histogram(pmt_sum, bins=2048)[0]
 
             sipm_guess = get_guess(sipm_spec)
             sipm_pe = get_nmean_errors(sipm_spec,
                                        get_cutoff(sipm_spec, guess=sipm_guess))
-            pmt_pe = get_nmean_errors(pmt_spec, get_cutoff(pmt_spec,
-                                      1950, window=30))
-            if pmt_pe == inf or small_pmt_win:
-                pmt_pe = get_nmean_errors(pmt_spec, get_cutoff(pmt_spec,
-                                          1950, window=10))
+            pmt_pe = get_nmean_errors(pmt_spec, get_co_exp(pmt_spec, 1950))
+            #if pmt_pe == inf or small_pmt_win:
+            #    pmt_pe = get_nmean_errors(pmt_spec, get_cutoff(pmt_spec,
+            #                              1950, window=10))
             if print_pe:
                 print 'sipm pe' + str(sipm_pe)
                 print 'pmt pe' + str(pmt_pe)

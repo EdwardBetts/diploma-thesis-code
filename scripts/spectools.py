@@ -14,6 +14,17 @@ def get_cutoff(data, guess, window=50):
     return amin - 5.5 + guess - window
 
 
+def get_co_exp(data, guess, window=30):
+    co = guess
+    for i in range(10):
+        co_last = co
+        co = get_cutoff(data, co, window)
+        if abs(co_last - co) < 1:
+            return co
+    print 'no min found'
+    return guess
+
+
 def get_nmean_errors(data, cutoff, swin=7):
     pedestal = float(sum(data[cutoff:]))
     all_ = sum(data)
