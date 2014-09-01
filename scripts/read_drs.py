@@ -22,7 +22,7 @@ def process_file(filename, filter_params=0.1,
 
     b, a = iirfilter(1, filter_params, btype=f_type, **args)
     my_dtype = return_dtype(nchannels)
-    with open(filename, 'r') as f:
+    with open(filename, 'rb') as f:
         fil_min = [min(fevent[p_w[0]:p_w[1]])
                    for fevent in (filtfilt(b, a, np.fromstring(event,
                                   my_dtype)[0][5])
@@ -35,7 +35,7 @@ def process_file(filename, filter_params=0.1,
 def read_events(filename, n_events, chnl=5, nchannels=1):
     #drs_chnls: 1->5, 2->7, 3->9, 4->11; time->3
     my_dtype = return_dtype(nchannels)
-    with open(filename, 'r') as f:
+    with open(filename, 'rb') as f:
         events = [np.fromstring(event_generator(f, nchannels).next(),
                                 my_dtype)[0][chnl]
                   for i in range(n_events)]
@@ -80,7 +80,7 @@ def return_dtype(n):
 def scatter(filename, thrs, nchannels=2):
     b, a = iirfilter(1, (0.002, 0.05))
     my_dtype = return_dtype(nchannels)
-    with open(filename, 'r') as f:
+    with open(filename, 'rb') as f:
         gen = (np.fromstring(event, my_dtype)[0][5]
                for event in event_generator(f, nchannels))
 
@@ -96,7 +96,7 @@ def scatter(filename, thrs, nchannels=2):
 def dark_scatter(filename, thrs, protoevent, nchannels=2):
     b, a = iirfilter(1, (0.002, 0.05))
     my_dtype = return_dtype(nchannels)
-    with open(filename, 'r') as f:
+    with open(filename, 'rb') as f:
         gen = (np.fromstring(event, my_dtype)[0][5]
                for event in event_generator(f, nchannels))
 
@@ -112,7 +112,7 @@ def dark_scatter(filename, thrs, protoevent, nchannels=2):
 def lowpass_scatter(filename, thrs, nchannels=2):
     b, a = iirfilter(1, 0.05, btype='lowpass')
     my_dtype = return_dtype(nchannels)
-    with open(filename, 'r') as f:
+    with open(filename, 'rb') as f:
         gen = (np.fromstring(event, my_dtype)[0][5]
                for event in event_generator(f, nchannels))
 
@@ -126,7 +126,7 @@ def lowpass_scatter(filename, thrs, nchannels=2):
 
 
 def int_spec(filename, win, nchannels=2, chnl=5):
-    with open(filename, 'r') as f:
+    with open(filename, 'rb') as f:
         my_dtype = return_dtype(nchannels)
         gen = (np.fromstring(event, my_dtype)[0][chnl]
                for event in event_generator(f, nchannels))
