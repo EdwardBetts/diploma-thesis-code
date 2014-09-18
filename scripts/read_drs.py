@@ -126,7 +126,7 @@ def lowpass_scatter(filename, thrs, nchannels=2):
     return int_data, min_data
 
 
-def int_spec(filename, win, nchannels=2, chnl=5, fortran=False):
+def int_spec(filename, win, nchannels=2, chnl=5, fortran=False, range=None):
     with open(filename, 'rb') as f:
         my_dtype = return_dtype(nchannels)
         gen = (np.fromstring(event, my_dtype)[0][chnl]
@@ -135,4 +135,4 @@ def int_spec(filename, win, nchannels=2, chnl=5, fortran=False):
             int_data = [fsum(event[win[0]:win[1]]) for event in gen]
         else:
             int_data = [event[win[0]:win[1]].sum() for event in gen]
-        return np.histogram(int_data, bins=2048)
+        return np.histogram(int_data, bins=2048, range=range)
