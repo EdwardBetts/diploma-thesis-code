@@ -3,9 +3,10 @@ from numpy import fromstring, sum, histogram, exp, sqrt
 from pde_int import get_guess, get_cutoff, get_n_mean, get_nmean_errors
 from Fit import getFitData
 from scipy.signal import iirfilter, filtfilt
+from fsum import trigger, fsum
 
 
-def darks(filename, thrs_1, thrs_2=None, nchannels=2):
+def darks(filename, thrs_1, thrs_2=None, rng=(40, 800), nchannels=2):
 
     print 'getting dark count spectum'
     if thrs_2 is None:
@@ -18,12 +19,9 @@ def darks(filename, thrs_1, thrs_2=None, nchannels=2):
         traces = []
 
         for event in gen:
-            for i, j in enumerate(event[40:100]):
-                if event[i+40] < thrs_1 and event[i+60] < thrs_2:
-                    traces.append(event[i+20:i+200])
-                    break
+            traces.append(trigger(thrs_1, event, rng))
 
-    return [sm for sm in (sum(trace) for trace in traces) if sm > 0]
+    return [sm for sm in (fsum(trace) for trace in traces) if sm > 0]
 
 
 def peaks(filename, int_limits, nchannels=2):

@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.signal import iirfilter, filtfilt
-from fsum import fsum
+from fsum import fsum, fmin
 
 
 class event(object):
@@ -126,7 +126,7 @@ def lowpass_scatter(filename, thrs, nchannels=2):
     return int_data, min_data
 
 
-def int_spec(filename, win, nchannels=2, chnl=5, fortran=False, range=None):
+def int_spec(filename, win, nchannels=2, chnl=5, fortran=True, range=None):
     with open(filename, 'rb') as f:
         my_dtype = return_dtype(nchannels)
         gen = (np.fromstring(event, my_dtype)[0][chnl]
@@ -136,3 +136,13 @@ def int_spec(filename, win, nchannels=2, chnl=5, fortran=False, range=None):
         else:
             int_data = [event[win[0]:win[1]].sum() for event in gen]
         return np.histogram(int_data, bins=2048, range=range)
+
+
+def min_spec(filename, win, nchannels=2, chnl=5, range=None):
+    with open(filename, 'rb') as f:
+        my_dtype = return_dtype(nchannels)
+        gen = (np.fromstring(event, my_dtype)[0][chnl]
+               for event in event_generator(f, nchannels))
+
+        min_data = [fmin(event[win[0]:win[1]]) for event in gen]
+        return np.histogram(min_data, bins=2048, range=range)
