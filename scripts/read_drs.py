@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.signal import iirfilter, filtfilt
 from fsum import fsum, fmin
+from eventtools import to_units, extract_events
+from contextlib import contextmanager
 
 
 class event(object):
@@ -35,20 +37,9 @@ def process_file(filename, filter_params=0.1,
 
 def read_events(filename, n_events, chnl=5, nchannels=1):
     #drs_chnls: 1->5, 2->7, 3->9, 4->11; time->3
-    my_dtype = return_dtype(nchannels)
-    with open(filename, 'rb') as f:
-        events = [np.fromstring(event_generator(f, nchannels).next(),
-                                my_dtype)[0][chnl]
-                  for i in range(n_events)]
+    with trace_gen(filename, nchannels, chnl) as gen:
+        events = [gen.next() for i in range(n_events)]
     return events
-
-
-def read_drs_binary(filename, no_of_channels=1):
-    #read the whole binary file into memory
-    dtype = return_dtype(no_of_channels)
-
-    data = np.fromfile(filename, dtype=dtype)
-    return data
 
 
 def event_generator(f, nchannels=1):
@@ -78,13 +69,23 @@ def return_dtype(n):
     return dtype
 
 
-def scatter(filename, thrs, nchannels=2):
-    b, a = iirfilter(1, (0.002, 0.05))
-    my_dtype = return_dtype(nchannels)
-    with open(filename, 'rb') as f:
-        gen = (np.fromstring(event, my_dtype)[0][5]
-               for event in event_generator(f, nchannels))
+@contextmanager
+def trace_gen(filename, nchannels=1, chnl=5):
+    """generator which yields event from binary drs4 file.
+    usage: with trace_gen() as gen: events = [event for event in gen]"""
+    f = open(filename, 'rb')
+    dtype = return_dtype(nchannels)
+    gen = (np.fromstring(event, dtype)[0][chnl]
+           for event in event_generator(f, nchannels))
+    try:
+        yield gen
+    finally:
+        f.close()
 
+
+def scatter(filename, thrs, nchannels=2, chnl=5):
+    b, a = iirfilter(1, (0.002, 0.05))
+    with trace_gen(filename, nchannels, chnl) as gen:
         data = [(sum(event[thrs:thrs + 180]),
                  min(filtfilt(b, a, event)[thrs:thrs + 180]) - 200)
                 for event in gen if max(filtfilt(b, a, event)[:20]) < 400]
@@ -94,29 +95,9 @@ def scatter(filename, thrs, nchannels=2):
     return int_data, min_data
 
 
-def dark_scatter(filename, thrs, protoevent, nchannels=2):
-    b, a = iirfilter(1, (0.002, 0.05))
-    my_dtype = return_dtype(nchannels)
-    with open(filename, 'rb') as f:
-        gen = (np.fromstring(event, my_dtype)[0][5]
-               for event in event_generator(f, nchannels))
-
-        data = [(sum(event[thrs:thrs + 180] + protoevent[thrs:thrs + 180]),
-                 min(filtfilt(b, a, event + protoevent)[thrs:thrs + 180])-200)
-                for event in gen if max(filtfilt(b, a, event)[:20]) < 400]
-
-    int_data = zip(*data)[0]
-    min_data = zip(*data)[1]
-    return int_data, min_data
-
-
 def lowpass_scatter(filename, thrs, nchannels=2):
     b, a = iirfilter(1, 0.05, btype='lowpass')
-    my_dtype = return_dtype(nchannels)
-    with open(filename, 'rb') as f:
-        gen = (np.fromstring(event, my_dtype)[0][5]
-               for event in event_generator(f, nchannels))
-
+    with trace_gen(filename, nchannels) as gen:
         data = [(sum(event[thrs:thrs + 180]),
                  min(filtfilt(b, a, event)[thrs:thrs + 180]) - 200)
                 for event in gen]
@@ -127,22 +108,33 @@ def lowpass_scatter(filename, thrs, nchannels=2):
 
 
 def int_spec(filename, win, nchannels=2, chnl=5, fortran=True, range=None):
-    with open(filename, 'rb') as f:
-        my_dtype = return_dtype(nchannels)
-        gen = (np.fromstring(event, my_dtype)[0][chnl]
-               for event in event_generator(f, nchannels))
+    with trace_gen(filename, nchannels, chnl) as gen:
         if fortran:
             int_data = [fsum(event[win[0]:win[1]]) for event in gen]
         else:
             int_data = [event[win[0]:win[1]].sum() for event in gen]
-        return np.histogram(int_data, bins=2048, range=range)
+
+    return np.histogram(int_data, bins=2048, range=range)
 
 
 def min_spec(filename, win, nchannels=2, chnl=5, range=None):
-    with open(filename, 'rb') as f:
-        my_dtype = return_dtype(nchannels)
-        gen = (np.fromstring(event, my_dtype)[0][chnl]
-               for event in event_generator(f, nchannels))
-
+    with trace_gen(filename, nchannels, chnl) as gen:
         min_data = [fmin(event[win[0]:win[1]]) for event in gen]
-        return np.histogram(min_data, bins=2048, range=range)
+
+    return np.histogram(min_data, bins=2048, range=range)
+
+
+def base_test(filename, win, nchannels=2, chnl=5, **kwargs):
+    with trace_gen(filename, nchannels, chnl) as gen:
+        min_data = [fsum(to_units(event[win[0]:win[1]], **kwargs))
+                    for event in gen]
+
+    return np.histogram(min_data, bins=2048)
+
+
+def fact_dark_spec(filename, thres, nchannels=2, chnl=5, base=0, **kwargs):
+    with trace_gen(filename, nchannels, chnl) as gen:
+        int_data = [fsum(event) for trace in gen
+                    for event in extract_events(trace, base, thres)]
+
+    return np.histogram(int_data, bins=2048)
