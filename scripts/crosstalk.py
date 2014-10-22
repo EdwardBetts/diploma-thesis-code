@@ -1,7 +1,7 @@
 from read_drs import event_generator, return_dtype
 from numpy import fromstring, sum, histogram, exp, sqrt
 from pde_int import get_guess, get_cutoff, get_n_mean, get_nmean_errors
-from Fit import getFitData
+from fit import getFitData
 from scipy.signal import iirfilter, filtfilt
 from fsum import trigger, fsum
 

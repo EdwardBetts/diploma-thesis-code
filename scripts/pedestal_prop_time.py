@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 import subprocess
 import numpy as np
-import time
-from Fit import getFitData, get_first_in_range
+from fit import getFitData, get_first_in_range
 from datetime import datetime
 from smooth import smooth
+
 
 def get_prop(n,cutoff):
     prop_data = []
@@ -27,6 +27,7 @@ def get_prop(n,cutoff):
 
     return times, prop_data, errors
 
+
 #old
 def data_to_nmean(prop_data, errors):
     nmean = -np.log(prop_data)
@@ -34,12 +35,13 @@ def data_to_nmean(prop_data, errors):
 
     return nmean, err_nmean
 
+
 def nmean_n_times(time, filename, n, channels=(20,), cutoffs=False, pmt=None, dir_=None):
     process_string = '/home/astro/jammer/Programme_vme/v965_1'
     if dir_ is None:
         dir_ = '/home/astro/jammer/diplom/led/pde_test/'
     from datetime import datetime
-    f = open(dir_ + filename,'w') #open file to overwrite anything
+    f = open(dir_ + filename, 'w') #open file to overwrite anything
     f.close()
 
     i = 0
@@ -96,6 +98,7 @@ def nmean_n_times(time, filename, n, channels=(20,), cutoffs=False, pmt=None, di
         if pmt is not None:
             print 'PMT n_mean: %.3f' %-np.log(prop_err[-1][0])
 
+
 #old
 def get_prop_error(data,cutoff):
         sum_pedestal = data[:cutoff].sum()
@@ -105,11 +108,13 @@ def get_prop_error(data,cutoff):
 
         return prop, error
 
+
 def get_threshold(data, w_len, m=30):
     fit_data = getFitData(data, 3, m=m, window_len=w_len)
 
     #11 is the window_len in smooth, this shifts the whole histogram to +5.5 indices
     return (fit_data[4] + fit_data[1]) / 2 - 10
+
 
 def get_cutoff(data, w_len=50, m=30, guess=None):
     if guess is None:
@@ -120,6 +125,7 @@ def get_cutoff(data, w_len=50, m=30, guess=None):
     smoothData = smooth(data)
     return get_first_in_range(smoothData[approx - w_len:approx + w_len],
                               approx, w_len)
+
 
 def to_file(filename, threshold, data):
     data = np.array(data[1])
@@ -133,6 +139,7 @@ def append_file(filename, nmean):
     f = open('/home/astro/jammer/diplom/messdaten/pde_tests/pde_first/' + filename,'a')
     np.savetxt(f,[nmean])
     f.close()
+
 
 def extract_file(filename):
     data = np.loadtxt(filename, unpack=True)
@@ -148,4 +155,3 @@ def extract_file(filename):
     dates = [datetime.strptime(i, '%Y-%m-%d %H:%M:%S') for i in times]
 
     return data, dates
-
