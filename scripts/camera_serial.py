@@ -58,15 +58,11 @@ class CameraCommunication(cmd.Cmd):
     def run(self):
             self.t1 = threading.Thread(target=self._run)
             self.t1.start()
-            if self.running:
-                self.cmdloop()
+            self.cmdloop()
 
     def _run(self):
-        try:
-            self.ser.open()
-            self.running = True
-        except OSError as er:
-            print er
+        self.ser.open()
+        self.running = True
         while self.running:
             time.sleep(.1)
             if self.ser.inWaiting() > 1:
