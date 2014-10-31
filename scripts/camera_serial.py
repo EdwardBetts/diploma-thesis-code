@@ -50,18 +50,23 @@ class CameraCommunication(cmd.Cmd):
         self.ser.baudrate = 115200
         self.ser.timeout = .05
         self.prompt = 'cam> '
+        self.running = False
 
     def emptyline(self):
         pass
 
     def run(self):
-        self.t1 = threading.Thread(target=self._run)
-        self.t1.start()
-        self.cmdloop()
+            self.t1 = threading.Thread(target=self._run)
+            self.t1.start()
+            if self.running:
+                self.cmdloop()
 
     def _run(self):
-        self.ser.open()
-        self.running = True
+        try:
+            self.ser.open()
+            self.running = True
+        except OSError as er:
+            print er
         while self.running:
             time.sleep(.1)
             if self.ser.inWaiting() > 1:
