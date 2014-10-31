@@ -1,11 +1,27 @@
 from read_drs import event_generator, return_dtype
 from numpy import fromstring, sum, histogram, exp, sqrt
 from pde_int import get_guess, get_cutoff, get_n_mean, get_nmean_errors
-from fit import getFitData
+from fit import get_fit_data, odr_spec
 from scipy.signal import iirfilter, filtfilt
 from fsum import trigger, fsum
+from fitting_funcs import mod_erlang
 
 
+def xtalk_dark_spec(spec, n, m=70):
+    params = get_fit_data(spec, n, m=m, spec=True)
+    fit_data = odr_spec(n, spec, params)
+    return xtalk_from_fit(fit_data)
+
+
+def xtalk_from_fit(fit_data):
+    p, nu = fit_data[0][-2:]
+
+    one5pe = sum([mod_erlang(i+2, p, nu) for i in range(20)])
+    zero5pe = sum([mod_erlang(i+1, p, nu) for i in range(19)])
+    return one5pe / zero5pe
+
+
+###########################old function@22.10.2014############################
 def darks(filename, thrs_1, thrs_2=None, rng=(40, 800), nchannels=2):
 
     print 'getting dark count spectum'
