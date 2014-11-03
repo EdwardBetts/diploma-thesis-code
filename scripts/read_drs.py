@@ -1,7 +1,9 @@
 import numpy as np
-from fsum import fsum, fmin
+from fsum import fsum
 from contextlib import contextmanager
 from eventtools import to_units
+
+#read drs4v5 files
 
 
 def return_header(f, nchannels=1):
