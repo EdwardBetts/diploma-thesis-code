@@ -5,15 +5,7 @@ from eventtools import to_units, extract_events
 from contextlib import contextmanager
 
 
-class event(object):
-    """class object contains thresholds and cut conditions
-    here: int window should be 180 bins wide"""
-    def __init__(self, int_thrs, min_window, singlepe_cut=-105):
-        super(event, self).__init__()
-        self.int_thrs = int_thrs
-        self.int_thrs = int_thrs
-        self.min_window = min_window
-        self.singlepe_cut = singlepe_cut
+#reads binary files from DRS4 Chip software version 4
 
 
 def process_file(filename, filter_params=0.1,

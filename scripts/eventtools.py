@@ -7,12 +7,16 @@ def sliding_average(x, window=10):
 
 
 def to_units(x, base_offset=0):
-    return x * 0.5 / 2**15 - 0.5 - base_offset
+    return x / 65536. - 0.5 - base_offset
 
 
-def extract_events(trace, base_offset, trigger_threshold):
+def extract_events(trace, base_offset, trigger_threshold, old=False):
     #clip first and last 5 bins due to errors
-    raw_event = to_units(trace[5:-5], base_offset=base_offset)
+    #readout of old drs4 board doesnt convert to physical units automatically
+    if old:
+        raw_event = to_units(trace[5:-5], base_offset=base_offset)
+    else:
+        raw_event = trace[5:-5] - base_offset
 
     #perform sliding average to not be less susceptiable to noise
     event = sliding_average(raw_event)
