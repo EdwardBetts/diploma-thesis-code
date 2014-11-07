@@ -96,7 +96,7 @@ class CameraCommunication(cmd.Cmd):
     def do_id(self, line):
         self.send('*idn?')
 
-    def help_id(self, line):
+    def help_id(self):
         print 'displays the id-string of the camera.'
 
     def do_set_bias(self, args):
@@ -145,7 +145,7 @@ class CameraCommunication(cmd.Cmd):
 
     def do_set_offset_all(self, args):
         """set bias voltage for all channels.\nsyntax:\nset_offset_all #voltage
-15 <= #voltage(volts) <= 34"""
+? <= #voltage(volts) <= ?"""
         try:
             num = args.strip()
             try:
