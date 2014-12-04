@@ -7,10 +7,12 @@ from fsum import trigger, fsum
 from fitting_funcs import mod_erlang
 
 
-def xtalk_dark_spec(spec, n, m=70):
+def xtalk_dark_spec(spec, n, m=70, prop_func='erlang'):
     params = get_fit_data(spec, n, m=m, spec=True)
-    fit_data = odr_spec(n, spec, params)
-    return xtalk_from_fit(fit_data)
+    fit_data = odr_spec(n, spec, params, prop_func=prop_func)
+    xtalk = xtalk_from_fit(fit_data)
+    print xtalk
+    return xtalk, fit_data
 
 
 def xtalk_from_fit(fit_data):

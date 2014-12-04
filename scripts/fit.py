@@ -60,7 +60,7 @@ def get_fit_data(data, n, window_len=11, m=30, nopeaks=4, spec=False):
         last_peak[0] = new_peak
 
     if spec:
-        params.append(0.4)
+        params.append(0.2)
         params.append(1)
 
     return array(params)
@@ -95,9 +95,9 @@ def odr_gauss(n, data, params=None, fixed_params=None, nopeaks=4, **kw):
     return odr_fit(n, data, func, params, fixed_params, nopeaks, **kw)
 
 
-def odr_spec(n, data, params, fixed_params=None):
+def odr_spec(n, data, params, prop_func='erlang', fixed_params=None):
 
     def func(parameters, x):
-        return spec_func(x, n, *parameters)
+        return spec_func(x, n, prop_func, *parameters)
 
     return odr_fit(n, data, func, params, fixed_params)

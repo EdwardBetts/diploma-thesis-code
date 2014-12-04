@@ -28,7 +28,20 @@ def mod_erlang(n, p, nu):
     return num / denum
 
 
-def spec_func(x, n, *params):
+def poisson(n, p, nu=0):
+    return pow(p, n-1) / factorial(n)
+
+
+funcs = {'erlang': mod_erlang, 'poisson': poisson}
+
+
+def spec_func(x, n, func='erlang', *params):
+    if not func in funcs:
+        print func
+        raise KeyError
+    else:
+        function = funcs[func]
+
     A = [params[i*3] for i in range(n)]
     mu = [params[i*3+1] for i in range(n)]
     sigma = [params[i*3+2] for i in range(n)]
@@ -36,6 +49,6 @@ def spec_func(x, n, *params):
 
     a = [sig * sqrt(2*pi) for sig in sigma]
 
-    return A[0] * a[0] * np.array([mod_erlang(i+1, p, nu) *
+    return A[0] * a[0] * np.array([function(i+1, p, nu) *
                                   np.exp(-0.5*pow((x - mu[i]) / sigma[i], 2))
                                   / a[i] for i in range(n)]).sum(axis=0)

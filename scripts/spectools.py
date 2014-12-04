@@ -1,5 +1,22 @@
 from smooth import smooth
-from numpy import log, argmin, sqrt, r_, where, mean
+from numpy import log, argmin, sqrt, r_, where, mean, argmax
+from read_drs import base_test
+from eventtools import sliding_average
+from fit import get_fit_data
+
+
+def find_base(filename, **kwargs):
+    spec = base_test(filename, (300, 400), **kwargs)
+    #+4 from the 9 bins difference due to filtering
+    return spec[1][argmax(sliding_average(spec[0])) + 4] / 100
+
+
+def get_gain(hist, reverse=False):
+    #finds gain in arbitrary units from the difference of the first two peaks
+    if reverse:
+        hist = [line[::-1] for line in hist]
+    params = get_fit_data(hist[0], 4, m=70)
+    return hist[1][int(params[4])] - hist[1][int(params[1])]
 
 
 def get_n_mean(data, cutoff):

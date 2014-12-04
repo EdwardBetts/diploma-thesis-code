@@ -1,7 +1,7 @@
 import numpy as np
 from fsum import fsum
 from contextlib import contextmanager
-from eventtools import to_units
+from eventtools import to_units, extract_events
 
 #read drs4v5 files
 
@@ -64,7 +64,7 @@ channels = ['c1', 'c2']
 
 
 @contextmanager
-def trace_gen(filename, nchannels=1, channel='c1'):
+def trace_gen(filename, nchannels=1, channel='c1', base_offset=0):
     if not channel in channels:
         raise KeyError
 
@@ -72,7 +72,7 @@ def trace_gen(filename, nchannels=1, channel='c1'):
     header = return_header(f, nchannels)
     dtype = return_dtype(nchannels)
     chan_string = ''.join((channel, ' voltage'))
-    gen = (to_units(np.fromstring(event, dtype)[chan_string][0])
+    gen = (to_units(np.fromstring(event, dtype)[chan_string][0], base_offset)
            for event in event_generator(f, nchannels))
     try:
         yield gen
@@ -80,6 +80,25 @@ def trace_gen(filename, nchannels=1, channel='c1'):
         f.close()
 
 
-def read_events(filename, nevents, nchannels=1, channel='c1'):
-    with trace_gen(filename, nchannels, channel) as gen:
+def read_events(filename, nevents, nchannels=1, channel='c1', base_offset=0):
+    with trace_gen(filename, nchannels, channel, base_offset) as gen:
         return [gen.next() for i in range(nevents)]
+
+
+def base_test(filename, win, nchannels=1, chnl='c1', base_offset=0):
+    if not chnl in channels:
+        raise KeyError
+
+    with trace_gen(filename, nchannels, chnl, base_offset) as gen:
+        min_data = [fsum(event[win[0]:win[1]])
+                    for event in gen]
+
+    return np.histogram(min_data, bins=2048)
+
+
+def fact_dark_spec(filename, thres, nchannels=1, chnl='c1', base=0, **kwargs):
+    with trace_gen(filename, nchannels, chnl, base) as gen:
+        int_data = [fsum(event) for trace in gen
+                    for event in extract_events(trace, thres, **kwargs)]
+
+    return np.histogram(int_data, bins=2048)
