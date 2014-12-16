@@ -42,8 +42,10 @@ def get_fit_data(data, n, window_len=11, m=30, nopeaks=4, spec=False):
     #new get fit data.
     #will obtain first three maxima by the old method and the extrapolate
     #to get the other peaks
-    if n < 3:
-        raise ValueError('n must be greater than 2')
+    if n < 2:
+        raise ValueError('n must be greater than 1')
+    if n < nopeaks:
+        nopeaks = n
 
     smoothed_data = smooth.smooth(data, window_len)
 
