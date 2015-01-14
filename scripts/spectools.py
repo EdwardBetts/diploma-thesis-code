@@ -1,8 +1,16 @@
 from smooth import smooth
-from numpy import log, argmin, sqrt, r_, where, mean, argmax
-from read_drs import base_test
+from numpy import log, argmin, sqrt, r_, where, mean, argmax, histogram
+from scipy.signal import argrelmax
+from read_drs import base_test, trace_gen
 from eventtools import sliding_average
-from fit import get_fit_data
+from fit import find_peak_data
+
+
+def find_params(filename, pos_pol=True, **kwargs):
+    base = find_base(filename, **kwargs)
+    threshold, n_events = find_threshold(
+        filename, base_offset=base, pos_pol=pos_pol, **kwargs)
+    return base, threshold, n_events
 
 
 def find_base(filename, **kwargs):
@@ -11,11 +19,23 @@ def find_base(filename, **kwargs):
     return spec[1][argmax(sliding_average(spec[0])) + 4] / 100
 
 
+def find_threshold(filename, base_offset=0, pos_pol=True, **kws):
+    with trace_gen(filename, base_offset=base_offset, **kws) as gen:
+        min_data = [event[100:-100].min() for event in gen]
+    hist = histogram(min_data, bins=2048)
+    second = 2 if pos_pol else -2
+    index = argrelmax(hist[0][hist[0] != 0], order=5)[0][second]
+    return hist[1][hist[0] != 0][index] * 3/4, len(min_data)
+
+
 def get_gain(hist, reverse=False):
     #finds gain in arbitrary units from the difference of the first two peaks
     if reverse:
         hist = [line[::-1] for line in hist]
-    params = get_fit_data(hist[0], 4, m=70)
+    try:
+        params = find_peak_data(hist[0], 2)
+    except IndexError:
+        return -1
     return hist[1][int(params[4])] - hist[1][int(params[1])]
 
 
