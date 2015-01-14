@@ -1,26 +1,51 @@
 from read_drs import event_generator, return_dtype
-from numpy import fromstring, sum, histogram, exp, sqrt
+from numpy import fromstring, sum, histogram, exp, sqrt, mean, arange, array
 from pde_int import get_guess, get_cutoff, get_n_mean, get_nmean_errors
-from fit import get_fit_data, odr_spec
+from fit import *
 from scipy.signal import iirfilter, filtfilt
 from fsum import trigger, fsum
 from fitting_funcs import mod_erlang
 
 
-def xtalk_dark_spec(spec, n, m=70, prop_func='erlang'):
-    params = get_fit_data(spec, n, m=m, spec=True)
-    fit_data = odr_spec(n, spec, params, prop_func=prop_func)
-    xtalk = xtalk_from_fit(fit_data)
+def xtalk_dark_spec(spec, n, m=50, prop_func='erlang'):
+    n, params = peaks_for_spec(spec, n)
+    fit_data = cf_spec(n, spec, params, prop_func=prop_func)
+    #xtalk = xtalk_from_fit(fit_data)
+    xtalk = xtalk_from_data(fit_data, spec)
     print xtalk
     return xtalk, fit_data
 
 
-def xtalk_from_fit(fit_data):
-    p, nu = fit_data[0][-2:]
+def xtalk_spec_lmfit(spec):
+    n, params = params_for_spec_fit(spec)
+    model, result = fit_dark_spec(n, spec, params)
+    xtalk = xtalk_from_fit(model, result)
+    print xtalk
+    return xtalk, result
+
+
+#for lmfit
+def xtalk_from_fit(model, result):
+    out = model.eval_components(x=arange(2048), params=result.params)
+    n = len(out.keys()) - 1
+    num = sum(array([out[out.keys()[i+1]] for i in range(n-1)]) * out['amp'])
+    denum = sum(array([out[out.keys()[i]] for i in range(n)]) * out['amp'])
+    return num / denum
+
+
+#for curvefit data and mod erlang
+def xtalk_from_fit_cf(fit_data):
+    p, nu, A = fit_data[0][-3:]
 
     one5pe = sum([mod_erlang(i+2, p, nu) for i in range(20)])
     zero5pe = sum([mod_erlang(i+1, p, nu) for i in range(19)])
     return one5pe / zero5pe
+
+
+def xtalk_from_data(fit_data, spec):
+    index = int(mean((fit_data[0][1], fit_data[0][4])))
+    one5pe = spec[index:].sum()
+    return one5pe / float(spec.sum())
 
 
 ###########################old function@22.10.2014############################

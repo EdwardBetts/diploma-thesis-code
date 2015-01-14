@@ -1,15 +1,35 @@
 from read_drs import fact_dark_spec
-from spectools import find_base
-from crosstalk import xtalk_dark_spec
+from spectools import find_params, get_gain
+from crosstalk import xtalk_dark_spec, xtalk_spec_lmfit
+from scipy.optimize import curve_fit
 
 
-def extract_xtalk_dcr(filename, thres, nevents=80000, timebase=1./(2*10**9),
-                      p_func='erlang'):
-    dark_spec = fact_dark_spec(filename, thres, base=find_base(filename))
-    xtalk, fit_data = xtalk_dark_spec(dark_spec[0], 4, m=70, prop_func=p_func)
-
+def extract_xtalk_dcr_gain(filename, timebase=1./(2*10**9), pos_pol=True):
+    base, threshold, n_events = find_params(filename, pos_pol=pos_pol)
+    dark_spec = fact_dark_spec(filename, threshold, base=base, pos_pol=pos_pol)
+    if not pos_pol:
+        dark_spec = [data[::-1] for data in dark_spec]
+    try:
+        xtalk, result = xtalk_spec_lmfit(dark_spec[0])
+    except Exception:
+        print 'nan'
+        xtalk = float('nan')
     #dark count rate ist number of events / ontime
     #ontime = 1024 channels * timebase * number of events
-    ontime = 1024. * timebase * nevents
+    ontime = 1024. * timebase * n_events
     dcr = dark_spec[0].sum() / ontime
-    return xtalk, dcr
+
+    #gain
+    gain = get_gain(dark_spec)
+    return xtalk, dcr, gain
+
+
+def calc_gain(df):
+    def line(x, *p):
+        a, b = p
+        return a*x + b
+
+    df = df.dropna()
+    fit_data = curve_fit(line, df.index.values, df['gain'].abs().values,
+                         (.05, 1))
+    return -fit_data[0][1] / fit_data[0][0]
