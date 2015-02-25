@@ -85,7 +85,7 @@ class CameraCommunication(cmd.Cmd):
     def handle_output(self, readall):
         print readall.strip()
 
-    #command line methods
+    # command line methods
     def do_exit(self, line):
         self.shutdown()
         return True
@@ -113,7 +113,7 @@ class CameraCommunication(cmd.Cmd):
     def help_set_bias(self):
         print '\n'.join(('set bias voltage in one channel.',
                         'syntax:', 'set_bias #channel #voltage',
-                        '0 <= #channel <= 15', '15 <= #voltage(volts) <= 34'))
+                         '0 <= #channel <= 15', '15 <= #voltage(volts) <= 34'))
 
     def do_set_bias_all(self, args):
         """set bias voltage for all channels.\nsyntax:\nset_bias_all #voltage
@@ -141,7 +141,7 @@ class CameraCommunication(cmd.Cmd):
     def help_set_offset(self):
         print '\n'.join(('set offset voltage in one channel.',
                         'syntax:', 'set_offset #channel #voltage',
-                        '0 <= #channel <= 15', '? <= #voltage(volts) <= ?'))
+                         '0 <= #channel <= 15', '? <= #voltage(volts) <= ?'))
 
     def do_set_offset_all(self, args):
         """set bias voltage for all channels.\nsyntax:\nset_offset_all #voltage
@@ -155,8 +155,48 @@ class CameraCommunication(cmd.Cmd):
         except ValueError as er:
             print er
 
-cam = CameraCommunication()
-try:
-    cam.run()
-except KeyboardInterrupt:
-    cam.shutdown()
+
+if __name__ == '__main__':
+    cam = CameraCommunication()
+    try:
+        cam.run()
+    except KeyboardInterrupt:
+        cam.shutdown()
+
+
+# similar class, but for use in ipython
+
+class AdapterControl(object):
+    """docstring for AdapterControl"""
+    def __init__(self):
+        super(AdapterControl, self).__init__()
+        self.ser = serial.Serial()
+        self.ser.port = '/dev/ttyUSB0'
+        self.ser.baudrate = 115200
+        # read timeout, blocking time
+        self.ser.timeout = .05
+
+    def set_bias(self, chnl, num):
+        try:
+            return self.send(' '.join(('sb', str(channel(chnl)),
+                             str(bias_to_12bit(num)))))
+        except ValueError as er:
+            print er
+
+    def set_offset(self, chnl, num):
+        try:
+            return self.send(' '.join(('so', str(channel(chnl)),
+                             str(offset_to_12bit(num)))))
+        except ValueError as er:
+            print er
+
+    def get_id(self):
+        return self.send('*idn?')
+
+    def send(self, s):
+        self.ser.readall()
+        self.ser.write(''.join((s, '\r')).encode())
+        while self.ser.inWaiting() == 0:
+            time.sleep(0.001)
+        else:
+            return self.ser.readall()
