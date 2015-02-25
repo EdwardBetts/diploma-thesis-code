@@ -1,6 +1,6 @@
 from smooth import smooth
-from numpy import log, argmin, sqrt, r_, where, mean, argmax, histogram
-from scipy.signal import argrelmax
+from numpy import log, argmin, sqrt, r_, where, mean, argmax, histogram, arange
+from scipy.signal import argrelmax, find_peaks_cwt
 from read_drs import base_test, trace_gen
 from eventtools import sliding_average
 from fit import find_peak_data
@@ -21,10 +21,18 @@ def find_base(filename, **kwargs):
 
 def find_threshold(filename, base_offset=0, pos_pol=True, **kws):
     with trace_gen(filename, base_offset=base_offset, **kws) as gen:
-        min_data = [event[100:-100].min() for event in gen]
+        if pos_pol:
+            min_data = [event[100:-100].max() for event in gen]
+        else:
+            min_data = [event[100:-100].min() for event in gen]
     hist = histogram(min_data, bins=2048)
-    second = 2 if pos_pol else -2
-    index = argrelmax(hist[0][hist[0] != 0], order=5)[0][second]
+    # second = 2 if pos_pol else -2
+    # index = argrelmax(hist[0][hist[0] != 0], order=5)[0][second]
+    second = 1 if pos_pol else -1
+    try:
+        index = find_peaks_cwt(hist[0][hist[0] != 0], arange(10, 40))[second]
+    except IndexError:
+        index = find_peaks_cwt(hist[0][hist[0] != 0], arange(10, 40))[0]
     return hist[1][hist[0] != 0][index] * 3/4, len(min_data)
 
 
