@@ -65,7 +65,7 @@ channels = ['c1', 'c2']
 
 @contextmanager
 def trace_gen(filename, nchannels=1, channel='c1', base_offset=0):
-    if not channel in channels:
+    if channel not in channels:
         raise KeyError
 
     f = open(filename, 'rb')
@@ -90,8 +90,7 @@ def base_test(filename, win, nchannels=1, chnl='c1', base_offset=0):
         raise KeyError
 
     with trace_gen(filename, nchannels, chnl, base_offset) as gen:
-        min_data = [fsum(event[win[0]:win[1]])
-                    for event in gen]
+        min_data = [fsum(event[win[0]:win[1]]) for event in gen]
 
     return np.histogram(min_data, bins=2048)
 

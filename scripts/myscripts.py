@@ -14,12 +14,12 @@ def extract_xtalk_dcr_gain(filename, timebase=1./(2*10**9), pos_pol=True):
     except Exception:
         print 'nan'
         xtalk = float('nan')
-    #dark count rate ist number of events / ontime
-    #ontime = 1024 channels * timebase * number of events
+    # dark count rate ist number of events / ontime
+    # ontime = 1024 channels * timebase * number of events
     ontime = 1024. * timebase * n_events
     dcr = dark_spec[0].sum() / ontime
 
-    #gain
+    # gain
     gain = get_gain(dark_spec)
     return xtalk, dcr, gain
 
