@@ -80,13 +80,28 @@ def trace_gen(filename, nchannels=1, channel='c1', base_offset=0):
         f.close()
 
 
+@contextmanager
+def two_channel_trace_gen(filename, channels=('c1', 'c2'), base_offset=0):
+    f = open(filename, 'rb')
+    header = return_header(f, 2)
+    dtype = return_dtype(2)
+    chan_strings = [''.join((ch, ' voltage')) for ch in channels]
+    gen = ([to_units(np.fromstring(event, dtype)[ch][0], base_offset)
+           for ch in chan_strings]
+           for event in event_generator(f, 2))
+    try:
+        yield gen
+    finally:
+        f.close()
+
+
 def read_events(filename, nevents, nchannels=1, channel='c1', base_offset=0):
     with trace_gen(filename, nchannels, channel, base_offset) as gen:
         return [gen.next() for i in range(nevents)]
 
 
 def base_test(filename, win, nchannels=1, chnl='c1', base_offset=0):
-    if not chnl in channels:
+    if chnl not in channels:
         raise KeyError
 
     with trace_gen(filename, nchannels, chnl, base_offset) as gen:
