@@ -4,8 +4,11 @@ from crosstalk import xtalk_dark_spec, xtalk_spec_lmfit
 from scipy.optimize import curve_fit
 
 
-def extract_xtalk_dcr_gain(filename, timebase=1./(2*10**9), pos_pol=True):
-    base, threshold, n_events = find_params(filename, pos_pol=pos_pol)
+def extract_xtalk_dcr_gain(filename, timebase=1./(2*10**9), pos_pol=True,
+                           threshold=None):
+    base, threshold_, n_events = find_params(filename, pos_pol=pos_pol)
+    if threshold is None:
+        threshold = threshold_
     dark_spec = fact_dark_spec(filename, threshold, base=base, pos_pol=pos_pol)
     if not pos_pol:
         dark_spec = [data[::-1] for data in dark_spec]
@@ -24,6 +27,7 @@ def extract_xtalk_dcr_gain(filename, timebase=1./(2*10**9), pos_pol=True):
     return xtalk, dcr, gain
 
 
+# actually calc breakdown voltage
 def calc_gain(df):
     def line(x, *p):
         a, b = p
