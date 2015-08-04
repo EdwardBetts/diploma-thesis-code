@@ -175,6 +175,7 @@ class AdapterControl(object):
         self.ser.baudrate = 115200
         # read timeout, blocking time
         self.ser.timeout = .05
+        self.ser.open()
 
     def set_bias(self, chnl, num):
         try:
