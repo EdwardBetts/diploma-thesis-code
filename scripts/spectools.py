@@ -4,6 +4,8 @@ from scipy.signal import argrelmax, find_peaks_cwt
 from read_drs import base_test, trace_gen
 from eventtools import sliding_average
 from fit import find_peak_data
+import numpy as np
+from scipy.stats import scoreatpercentile
 
 
 def find_params(filename, pos_pol=True, **kwargs):
@@ -53,7 +55,9 @@ def get_n_mean(data, cutoff):
     return - log(pedestal / all_)
 
 
-def get_cutoff(data, guess, window=50):
+def get_cutoff(data, guess=None, window=50):
+    if not guess:
+        guess = get_guess(data)
     smoothdata = smooth(data)
     amin = argmin(smoothdata[guess - window: guess + window])
     return amin - 5.5 + guess - window
@@ -100,3 +104,20 @@ def getnm(hist):
     guess = get_guess(hist)
     cutoff = get_cutoff(hist, guess)
     return get_nmean_errors(hist, cutoff)
+
+
+def approx_gain(hist):
+    to_fft = np.lib.pad(hist[0], (5000, 5000), 'minimum') 
+    timestep = hist[1][1] - hist[1][0]
+    freqs = np.fft.fftfreq(len(to_fft), timestep)
+    # fft'd
+    fftd = np.abs(np.fft.rfft(to_fft))
+    index = experimental_find_fft_max(fftd)
+    return  1. / freqs[index]
+
+
+def experimental_find_fft_max(data):
+    indices = argrelmax(data)[0]
+    bg_score = scoreatpercentile(data, 10)
+    ratios = [((data[i] / bg_score), i) for i in indices]
+    return max(ratios)[1]

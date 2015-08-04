@@ -35,9 +35,9 @@ def extract_events(trace, trigger_threshold, base_offset=0, old=False,
     start = 30
     #integration window
     i_win = 35
-    while start < 950:
+    while start < len(trace) - 30:
         trigger = trig_f(trigger_threshold, event, start)
-        if 950 > trigger > start:
+        if len(trace) - 30 > trigger > start:
             mx, mxi = ext_ind(event, trigger + 5)
             halfmax = mx / 2
             arrival_time = trig_f(halfmax, event, mxi - 30)
@@ -51,6 +51,6 @@ def extract_events(trace, trigger_threshold, base_offset=0, old=False,
             else:
                 start = mxi + 15
         else:
-            start = 950
+            start = len(trace) - 30
 
     return events
