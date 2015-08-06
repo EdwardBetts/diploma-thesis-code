@@ -21,14 +21,15 @@ def delayed(delay):
 
 class Keithley(object):
     """docstring for Keithley"""
-    def __init__(self):
+    def __init__(self, tty_id=0):
         super(Keithley, self).__init__()
+        assert isinstance(tty_id, int)
         self._voltage = None
         self.time_offset = None
         # standard setup
         self.ser = serial.Serial()
         self.ser.baudrate = 9600
-        self.ser.port = '/dev/ttyUSB0'
+        self.ser.port = '/dev/ttyUSB{}'.format(tty_id)
         self.ser.timeout = .1
         self.ser.open()
         # check connection
