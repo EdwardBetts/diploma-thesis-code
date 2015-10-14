@@ -2,55 +2,55 @@ import numpy as np
 from fsum import fsum
 from contextlib import contextmanager
 from eventtools import to_units, extract_events
-
-#read drs4v5 files
+from fsum import argrelmin as arm
+# read drs4v5 files
 
 
 def return_header(f, nchannels=1):
-    #tbw: time bin width
+    # tbw: time bin width
     if nchannels == 1:
         dtype = np.dtype([('time header', np.str_, 4),
-                         ('serial number', np.int16, 2),
-                         ('c1 header', np.str_, 4),
-                         ('c1 tbw', np.float32, 1024)])
+                          ('serial number', np.int16, 2),
+                          ('c1 header', np.str_, 4),
+                          ('c1 tbw', np.float32, 1024)])
     elif nchannels == 2:
         dtype = np.dtype([('time header', np.str_, 4),
-                         ('serial number', np.int16, 2),
-                         ('c1 header', np.str_, 4),
-                         ('c1 tbw', np.float32, 1024),
-                         ('c2 header', np.str_, 4),
-                         ('c2 tbw', np.float32, 1024)])
+                          ('serial number', np.int16, 2),
+                          ('c1 header', np.str_, 4),
+                          ('c1 tbw', np.float32, 1024),
+                          ('c2 header', np.str_, 4),
+                          ('c2 tbw', np.float32, 1024)])
 
     return np.fromstring(f.read(8 + nchannels * 4100), dtype)
 
 
 def return_dtype(n):
-    #binary structure can be seen in
-    #http://www.psi.ch/drs/DocumentationEN/manual_rev50.pdf
-    #define dtype
+    # binary structure can be seen in
+    # http://www.psi.ch/drs/DocumentationEN/manual_rev50.pdf
+    # define dtype
     if n == 1:
         dtype = np.dtype([('header', np.str_, 4), ('event number', np.int32),
-                         ('date', np.int16, 7), ('range', np.int16),
-                         ('serial number', np.int8, 6),
-                         ('trigger cell', np.int16),
-                         ('c1 header', np.str_, 4),
-                         ('c1 voltage', np.uint16, 1024)])
+                          ('date', np.int16, 7), ('range', np.int16),
+                          ('serial number', np.int8, 6),
+                          ('trigger cell', np.int16),
+                          ('c1 header', np.str_, 4),
+                          ('c1 voltage', np.uint16, 1024)])
     elif n == 2:
         dtype = np.dtype([('header', np.str_, 4), ('event number', np.int32),
-                         ('date', np.int16, 7), ('range', np.int16),
-                         ('serial number', np.int8, 6),
-                         ('trigger cell', np.int16),
-                         ('c1 header', np.str_, 4),
-                         ('c1 voltage', np.uint16, 1024),
-                         ('c2 header', np.str_, 4),
-                         ('c2 voltage', np.uint16, 1024)])
+                          ('date', np.int16, 7), ('range', np.int16),
+                          ('serial number', np.int8, 6),
+                          ('trigger cell', np.int16),
+                          ('c1 header', np.str_, 4),
+                          ('c1 voltage', np.uint16, 1024),
+                          ('c2 header', np.str_, 4),
+                          ('c2 voltage', np.uint16, 1024)])
     return dtype
 
 
-def event_generator(f, nchannels=1):
+def event_generator(f, nchannels=1, n=1):
     rec = True
     while rec:
-        rec = f.read(32 + nchannels * 2052)
+        rec = f.read(n * (32 + nchannels * 2052))
         if rec:
             yield rec
 
@@ -87,7 +87,7 @@ def two_channel_trace_gen(filename, channels=('c1', 'c2'), base_offset=0):
     dtype = return_dtype(2)
     chan_strings = [''.join((ch, ' voltage')) for ch in channels]
     gen = ([to_units(np.fromstring(event, dtype)[ch][0], base_offset)
-           for ch in chan_strings]
+            for ch in chan_strings]
            for event in event_generator(f, 2))
     try:
         yield gen
