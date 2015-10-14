@@ -17,7 +17,7 @@ def find_params(filename, pos_pol=True, **kwargs):
 
 def find_base(filename, **kwargs):
     spec = base_test(filename, (300, 400), **kwargs)
-    #+4 from the 9 bins difference due to filtering
+    # 4 from the 9 bins difference due to filtering
     return spec[1][argmax(sliding_average(spec[0])) + 4] / 100
 
 
@@ -35,11 +35,11 @@ def find_threshold(filename, base_offset=0, pos_pol=True, **kws):
         index = find_peaks_cwt(hist[0][hist[0] != 0], arange(10, 40))[second]
     except IndexError:
         index = find_peaks_cwt(hist[0][hist[0] != 0], arange(10, 40))[0]
-    return hist[1][hist[0] != 0][index] * 3/4, len(min_data)
+    return hist[1][hist[0] != 0][index] * 3 / 4, len(min_data)
 
 
 def get_gain(hist, reverse=False):
-    #finds gain in arbitrary units from the difference of the first two peaks
+    # finds gain in arbitrary units from the difference of the first two peaks
     if reverse:
         hist = [line[::-1] for line in hist]
     try:
@@ -78,24 +78,24 @@ def get_nmean_errors(data, cutoff, swin=7):
     pedestal = float(sum(data[cutoff:]))
     all_ = sum(data)
     n_mean = -log(pedestal / all_)
-    #statistical error
+    # statistical error
     sterr = sqrt(pedestal) / pedestal
-    #systematic error:
+    # systematic error:
     syserr = max([abs(n_mean - get_n_mean(data, cutoff - swin + 2 * swin * i))
-                 for i in range(2)])
+                  for i in range(2)])
     return n_mean, sterr, syserr
 
 
 def get_guess(spec, window_len=11, n=2, m=20, bins=2048):
     sdata = smooth(spec[::-1], window_len)
 
-    #find values which are higher than neighbors
+    # find values which are higher than neighbors
     test = r_[True, sdata[1:] > sdata[:-1]] & r_[sdata[:-1] > sdata[1:], True]
 
-    #find values which are higher than the next m neighbors
+    # find values which are higher than the next m neighbors
     newInds = where(test)[0]
     values = [i - 5 for i in newInds[newInds > m] if sdata[i] ==
-              max(sdata[i-m:i+m + 1]) and sdata[i] > 1.0]
+              max(sdata[i - m:i + m + 1]) and sdata[i] > 1.0]
     mu_values = [bins - i for i in values[n - 2:n]]
     return mean(mu_values)
 
@@ -106,14 +106,14 @@ def getnm(hist):
     return get_nmean_errors(hist, cutoff)
 
 
-def approx_gain(hist):
-    to_fft = np.lib.pad(hist[0], (5000, 5000), 'minimum') 
+def approx_gain(hist, padding=5000):
+    to_fft = np.lib.pad(hist[0], (padding, padding), 'minimum')
     timestep = hist[1][1] - hist[1][0]
     freqs = np.fft.fftfreq(len(to_fft), timestep)
     # fft'd
     fftd = np.abs(np.fft.rfft(to_fft))
     index = experimental_find_fft_max(fftd)
-    return  1. / freqs[index]
+    return 1. / freqs[index]
 
 
 def experimental_find_fft_max(data):
