@@ -7,7 +7,7 @@ from pdetools import calc_pde_with_errors, correct_wavelength
 
 def extract_pde(func, dkcts, filename, wavelength, print_pe=False,
                 qe_loc='/home/astro/jammer/diplom/pde_measurement/QPMT3.dat',
-                **kwargs):
+                pmtwin=(610, 670), **kwargs):
 
     wls, currents, qes = loadtxt(qe_loc, unpack=True)
     qe = qes[where(wls == float(wavelength))[0][0]]
@@ -21,16 +21,16 @@ def extract_pde(func, dkcts, filename, wavelength, print_pe=False,
         sipm_hist = func(fname, **kwargs)[0]
 
         with trace_gen(fname, 2, 'c2') as gen:
-            pmt_sum = [sum(event[400:460]) for event in gen]
+            pmt_sum = [sum(event[pmtwin[0]:pmtwin[1]]) for event in gen]
             pmt_spec = histogram(pmt_sum, bins=2048)[0]
 
         sipm_guess = get_guess(sipm_hist)
         sipm_pe = get_nmean_errors(sipm_hist,
                                    get_cutoff(sipm_hist, guess=sipm_guess))
-        pmt_pe = get_nmean_errors(pmt_spec, get_co_exp(pmt_spec, 1950))
+        pmt_pe = get_nmean_errors(pmt_spec, get_co_exp(pmt_spec, 1900))
         if pmt_pe == inf:
             pmt_pe = get_nmean_errors(pmt_spec, get_cutoff(pmt_spec,
-                                      1950, window=10))
+                                      1900, window=10))
         if print_pe:
             print 'sipm pe' + str(sipm_pe)
             print 'pmt pe' + str(pmt_pe)
