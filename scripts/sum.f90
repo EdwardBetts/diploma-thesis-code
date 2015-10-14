@@ -103,3 +103,27 @@ subroutine min_and_ind(inarr, dim, start, vout)
         end if
     end do
 end subroutine
+
+subroutine argrelmin(inarr, dim, order, outarr, ct)
+    implicit none
+    integer :: i
+    integer, intent(in) :: order, dim
+    real(8), intent(in), dimension(dim) ::inarr
+    integer, dimension(dim / order) :: tmparr
+    integer, dimension(1) ::rloc, lloc
+    integer, intent(out) :: ct
+    integer, intent(out), dimension(dim / order) :: outarr
+
+    ct = 0
+    tmparr = 0
+    do i = order+1, dim - order
+        rloc = minloc(inarr(i:i+order))
+        lloc = minloc(inarr(i-order:i))
+        if ((rloc(1) .eq. 1) .and. (lloc(1) .eq. order+1)) then
+            ct = ct + 1
+            tmparr(ct) = i - 1
+        end if
+    end do
+
+    outarr = tmparr(1:ct+1)
+end subroutine
