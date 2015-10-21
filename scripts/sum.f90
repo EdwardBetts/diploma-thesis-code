@@ -127,3 +127,21 @@ subroutine argrelmin(inarr, dim, order, outarr, ct)
 
     outarr = tmparr(1:ct+1)
 end subroutine
+
+subroutine correlate(inarr1, dim1, inarr2, dim2, outarr)
+    implicit none
+    integer :: i, j
+    real(8) :: tempsum
+    integer, intent(in) :: dim1, dim2
+    real(8), intent(in), dimension(dim1) :: inarr1
+    real(8), intent(in), dimension(dim2) :: inarr2
+    real(8), intent(out), dimension(dim1 - dim2) :: outarr
+
+    do i = 1, dim1 - dim2
+        tempsum = 0
+        do j = 1, dim2
+            tempsum = tempsum + inarr1(i + j) * inarr2(j)
+        end do
+        outarr(i) = tempsum
+    end do
+end subroutine
