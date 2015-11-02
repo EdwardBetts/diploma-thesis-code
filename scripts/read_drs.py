@@ -2,7 +2,6 @@ import numpy as np
 from fsum import fsum
 from contextlib import contextmanager
 from eventtools import to_units, extract_events
-from fsum import argrelmin as arm
 # read drs4v5 files
 
 

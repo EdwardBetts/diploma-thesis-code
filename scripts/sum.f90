@@ -109,23 +109,18 @@ subroutine argrelmin(inarr, dim, order, outarr, ct)
     integer :: i
     integer, intent(in) :: order, dim
     real(8), intent(in), dimension(dim) ::inarr
-    integer, dimension(dim / order) :: tmparr
-    integer, dimension(1) ::rloc, lloc
+    integer, dimension(1) :: loc
     integer, intent(out) :: ct
     integer, intent(out), dimension(dim / order) :: outarr
 
     ct = 0
-    tmparr = 0
     do i = order+1, dim - order
-        rloc = minloc(inarr(i:i+order))
-        lloc = minloc(inarr(i-order:i))
-        if ((rloc(1) .eq. 1) .and. (lloc(1) .eq. order+1)) then
+        loc = minloc(inarr(i-order:i+order))
+        if (loc(1) .eq. order + 1) then
             ct = ct + 1
-            tmparr(ct) = i - 1
+            outarr(ct) = i - 1
         end if
     end do
-
-    outarr = tmparr(1:ct+1)
 end subroutine
 
 subroutine correlate(inarr1, dim1, inarr2, dim2, outarr)
