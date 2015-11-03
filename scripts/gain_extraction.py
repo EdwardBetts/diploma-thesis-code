@@ -101,32 +101,25 @@ def correct_spec(spec):
 class DynamicHist(object):
     """docstring for DynamicHist"""
 
-    def __init__(self, kernel, depth=100):
+    def __init__(self, kernel, initdata=None, depth=None):
         super(DynamicHist, self).__init__()
         self.kernel = kernel
-        self._depth = depth
-        self.data = np.zeros((4, depth), dtype=np.float)
-        self.means = np.zeros(4, dtype=np.float)
-        self.changed = np.zeros(4, dtype=np.bool)
-        self.inds = np.zeros(4, dtype=np.int)
         self.counter = np.zeros(4, dtype=np.int)
+        self.depth = depth
+        if self.depth is None or self.depth.shape != (4,):
+            self.depth = np.zeros(4) + 0.01
+        if initdata is not None:
+            self.means = initdata.mean(axis=1)
+        else:
+            self.means = np.zeros(4, dtype=np.float)
 
     def insert_trace(self, event):
         arr = correlate(event, self.kernel)
         vals = arr[argrelmin(arr, order=20)]
         for val in vals:
             i = self.find_index(val)
-            self.data[i][self.inds[i]] = val
-            self.changed[i] = True
-            self.inds[i] = self.inds[i] + 1 if self.inds[i] < self._depth - 1 else 0
+            self.means[i] = self.means[i] * (1 - self.depth[i]) + val * self.depth[i]
             self.counter[i] += 1
-        self.calc_means()
-
-    def calc_means(self):
-        for i in range(len(self.data)):
-            if self.changed[i]:
-                self.means[i] = self.data[i].mean()
-                self.changed[i] = False
 
     def find_index(self, val):
         diff = np.inf
@@ -144,9 +137,5 @@ class DynamicHist(object):
 
     @classmethod
     def from_hist(cls, histdata, kernel):
-        depth = histdata.shape[1]
-        dyn_hist = cls(kernel, depth)
-        dyn_hist.data = histdata
-        dyn_hist.changed = np.ones(4, dtype=np.bool)
-        dyn_hist.calc_means()
+        dyn_hist = cls(kernel, histdata)
         return dyn_hist
