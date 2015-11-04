@@ -2,6 +2,7 @@ import numpy as np
 from fsum import fsum
 from contextlib import contextmanager
 from eventtools import to_units, extract_events
+import datetime as dt
 # read drs4v5 files
 
 
@@ -88,6 +89,25 @@ def two_channel_trace_gen(filename, channels=('c1', 'c2'), base_offset=0):
     gen = ([to_units(np.fromstring(event, dtype)[ch][0], base_offset)
             for ch in chan_strings]
            for event in event_generator(f, 2))
+    try:
+        yield gen
+    finally:
+        f.close()
+
+
+@contextmanager
+def time_trace_gen(filename, nchannels=1, channel='c1', base_offset=0):
+    if channel not in channels:
+        raise KeyError
+
+    f = open(filename, 'rb')
+    header = return_header(f, nchannels)
+    dtype = return_dtype(nchannels)
+    chan_string = ''.join((channel, ' voltage'))
+    gen = ((dt.datetime(*raw['date']), to_units(raw[chan_string],
+           base_offset))
+           for event in event_generator(f, nchannels)
+           for raw in np.fromstring(event, dtype))
     try:
         yield gen
     finally:
