@@ -56,6 +56,7 @@ def fit_find_gain(spec):
 
 
 def build_params(spec, arr):
+    """for the later fit"""
     p = lmfit.Parameters()
     sigma = .01
     for i, index in enumerate(arr):
@@ -118,7 +119,12 @@ class DynamicHist(object):
         vals = arr[argrelmin(arr, order=20)]
         for val in vals:
             i = self.find_index(val)
-            self.means[i] = self.means[i] * (1 - self.depth[i]) + val * self.depth[i]
+            n_val = self.means[i] * (1 - self.depth[i]) + val * self.depth[i]
+            if i == 0:
+                diff = n_val - self.means[i]
+                self.means += diff
+            else:
+                self.means[i] = n_val
             self.counter[i] += 1
 
     def find_index(self, val):
