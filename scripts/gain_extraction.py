@@ -109,10 +109,9 @@ class DynamicHist(object):
         self.depth = depth
         if self.depth is None or self.depth.shape != (4,):
             self.depth = np.zeros(4) + 0.01
-        if initdata is not None:
-            self.means = initdata.mean(axis=1)
-        else:
-            self.means = np.zeros(4, dtype=np.float)
+        self.means = initdata
+        if self.means is None or self.means.shape != (4,):
+            raise ValueError
 
     def insert_trace(self, event):
         arr = correlate(event, self.kernel)
@@ -136,6 +135,9 @@ class DynamicHist(object):
                 diff = dist
                 index = i
         return index
+
+    def return_gain(self):
+        return abs(self.means[0] - self.means[1])
 
     @classmethod
     def from_spec(cls, spec):
