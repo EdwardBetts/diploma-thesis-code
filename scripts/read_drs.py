@@ -104,7 +104,8 @@ def time_trace_gen(filename, nchannels=1, channel='c1', base_offset=0):
     header = return_header(f, nchannels)
     dtype = return_dtype(nchannels)
     chan_string = ''.join((channel, ' voltage'))
-    gen = ((dt.datetime(*raw['date']), to_units(raw[chan_string],
+    correction = np.array([1, 1, 1, 1, 1, 1, 1000])
+    gen = ((dt.datetime(*(raw['date']*correction)), to_units(raw[chan_string],
            base_offset))
            for event in event_generator(f, nchannels)
            for raw in np.fromstring(event, dtype))
