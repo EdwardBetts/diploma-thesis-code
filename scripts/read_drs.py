@@ -1,5 +1,8 @@
 import numpy as np
-from fsum import fsum
+try:
+    from fsum import fsum
+except ImportError:
+    fsum = sum
 from contextlib import contextmanager
 try:
     from eventtools import extract_events
