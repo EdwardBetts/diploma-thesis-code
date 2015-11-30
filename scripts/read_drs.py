@@ -1,7 +1,11 @@
 import numpy as np
 from fsum import fsum
 from contextlib import contextmanager
-from eventtools import to_units, extract_events
+try:
+    from eventtools import extract_events
+    fact = True
+except ImportError:
+    fact = False
 import datetime as dt
 # read drs4v5 files
 
@@ -45,6 +49,20 @@ def return_dtype(n):
                           ('c2 header', np.str_, 4),
                           ('c2 voltage', np.uint16, 1024)])
     return dtype
+
+
+def get_n_channels(filename):
+    """for now just for one and two channels"""
+    with open(filename, 'rb') as f:
+        channels = []
+        for i in range(4):
+            f.seek(8 + i * (1025 * 4))
+            line = f.read(4)
+            if 'C00' in line:
+                channels.append(line[3])
+            else:
+                break
+    return channels
 
 
 def event_generator(f, nchannels=1, n=1):
@@ -131,8 +149,13 @@ def base_test(filename, win, nchannels=1, chnl='c1', base_offset=0):
 
 
 def fact_dark_spec(filename, thres, nchannels=1, chnl='c1', base=0, **kwargs):
+    assert fact
     with trace_gen(filename, nchannels, chnl, base) as gen:
         int_data = [fsum(event) for trace in gen
                     for event in extract_events(trace, thres, **kwargs)]
 
     return np.histogram(int_data, bins=2048)
+
+
+def to_units(x, base_offset=0):
+    return x / 65536. - 0.5 - base_offset
