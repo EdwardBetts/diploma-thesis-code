@@ -6,7 +6,7 @@ import datetime as dt
 
 
 test_string = 'KEITHLEY INSTRUMENTS INC.,MODEL 2400,1232220,C32'
-delay = 0.2
+delay = 0.11
 
 
 def delayed(delay):
