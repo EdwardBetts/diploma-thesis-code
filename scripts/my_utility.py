@@ -11,6 +11,6 @@ def build_time_string():
 def print_progress(frac):
     length = 30
     block = int(round(length*frac))
-    text = '\r[{}] {:.3g}%'.format('#'*block + '-'*(length - block), frac*100)
+    text = '\r[{}] {:.3%}'.format('#'*block + '-'*(length - block), frac)
     stdout.write(text)
     stdout.flush()
